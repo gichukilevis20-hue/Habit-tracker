@@ -3,5 +3,6 @@ django-allauth[socialaccount]
 django-crispy-forms
 djangorestframework
 Pillow
+qrcode
 python-dotenv
 dj-database-url

@@ -183,12 +183,12 @@ WSGI_APPLICATION = 'habittracker.wsgi.application'
 # For Vercel/production, use DATABASE_URL environment variable
 # For local development, use SQLite
 
-import dj_database_url
-
 DATABASE_URL = os.getenv('DATABASE_URL', '')
 
 if DATABASE_URL:
-    # Production database (PostgreSQL, MySQL, etc.)
+    # Only require dj-database-url when a DATABASE_URL is actually configured.
+    import dj_database_url
+
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
