@@ -3,7 +3,7 @@
   "devCommand": "python manage.py runserver 0.0.0.0:3000",
   "env": {
     "PYTHON_VERSION": "3.11",
-    "DEBUG": false
+    "DEBUG": "False"
   },
   "functions": {
     "api/index.py": {
