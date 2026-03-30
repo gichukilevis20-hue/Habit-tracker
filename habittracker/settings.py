@@ -121,8 +121,7 @@ append_unique(
     normalize_host(VERCEL_URL),
     normalize_host(VERCEL_PROJECT_PRODUCTION_URL),
 )
-if VERCEL_ENABLED or VERCEL_URL or VERCEL_PROJECT_PRODUCTION_URL:
-    append_unique(ALLOWED_HOSTS, '.vercel.app')
+append_unique(ALLOWED_HOSTS, '.vercel.app')
 
 BITCOIN_WALLET_ADDRESS = os.getenv('BITCOIN_WALLET', 'bc1q2hljnlh2lycamk6t9nl3f7rtyd639lf5ec6jlj')
 APP_NAME = os.getenv('APP_NAME', 'Habit Tracker').strip() or 'Habit Tracker'
@@ -159,8 +158,7 @@ append_unique(
     normalize_origin(VERCEL_URL),
     normalize_origin(VERCEL_PROJECT_PRODUCTION_URL),
 )
-if VERCEL_ENABLED or VERCEL_URL or VERCEL_PROJECT_PRODUCTION_URL:
-    append_unique(CSRF_TRUSTED_ORIGINS, 'https://*.vercel.app')
+append_unique(CSRF_TRUSTED_ORIGINS, 'https://*.vercel.app')
 
 MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL', '').strip()
 if not MPESA_CALLBACK_URL and APP_BASE_URL:
