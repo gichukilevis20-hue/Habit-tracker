@@ -4,3 +4,4 @@ django-crispy-forms
 djangorestframework
 Pillow
 python-dotenv
+dj-database-url

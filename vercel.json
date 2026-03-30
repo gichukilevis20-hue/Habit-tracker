@@ -1,0 +1,25 @@
+{
+  "buildCommand": "pip install -r requirements.txt",
+  "devCommand": "python manage.py runserver 0.0.0.0:3000",
+  "env": {
+    "PYTHON_VERSION": "3.11",
+    "DEBUG": false
+  },
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.11",
+      "memory": 3008,
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "status": 404
+    },
+    {
+      "src": "/(.*)",
+      "dest": "api/index.py"
+    }
+  ]
+}
