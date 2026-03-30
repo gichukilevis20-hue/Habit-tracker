@@ -14,6 +14,7 @@ import importlib.util
 from pathlib import Path
 import os
 import sys
+from urllib.parse import urlsplit
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -51,6 +52,39 @@ def env_bool(name, default=False):
     return os.getenv(name, str(default)).strip().lower() in {'1', 'true', 'yes', 'on'}
 
 
+def env_list(name, default=''):
+    return [value.strip() for value in os.getenv(name, default).split(',') if value.strip()]
+
+
+def append_unique(values, *candidates):
+    seen = set(values)
+    for candidate in candidates:
+        cleaned = str(candidate or '').strip()
+        if cleaned and cleaned not in seen:
+            values.append(cleaned)
+            seen.add(cleaned)
+    return values
+
+
+def normalize_origin(value):
+    cleaned = str(value or '').strip().rstrip('/')
+    if not cleaned:
+        return ''
+    if '://' not in cleaned:
+        cleaned = f'https://{cleaned}'
+    parts = urlsplit(cleaned)
+    if not parts.netloc:
+        return ''
+    return f'{parts.scheme}://{parts.netloc}'
+
+
+def normalize_host(value):
+    origin = normalize_origin(value)
+    if not origin:
+        return ''
+    return urlsplit(origin).netloc.split(':', 1)[0]
+
+
 def social_app_from_env(prefix, *, extra_settings=None):
     client_id = os.getenv(f'{prefix}_CLIENT_ID', '').strip()
     secret = os.getenv(f'{prefix}_SECRET', '').strip()
@@ -76,7 +110,20 @@ DEBUG = env_bool('DEBUG', True)
 if not DEBUG and 'runserver' in sys.argv:
     DEBUG = True
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+VERCEL_ENABLED = env_bool('VERCEL', False)
+VERCEL_URL = os.getenv('VERCEL_URL', '').strip()
+VERCEL_PROJECT_PRODUCTION_URL = os.getenv('VERCEL_PROJECT_PRODUCTION_URL', '').strip()
+
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', '127.0.0.1,localhost')
+append_unique(
+    ALLOWED_HOSTS,
+    normalize_host(APP_BASE_URL := os.getenv('APP_BASE_URL', '').rstrip('/')),
+    normalize_host(VERCEL_URL),
+    normalize_host(VERCEL_PROJECT_PRODUCTION_URL),
+)
+if VERCEL_ENABLED or VERCEL_URL or VERCEL_PROJECT_PRODUCTION_URL:
+    append_unique(ALLOWED_HOSTS, '.vercel.app')
+
 BITCOIN_WALLET_ADDRESS = os.getenv('BITCOIN_WALLET', 'bc1q2hljnlh2lycamk6t9nl3f7rtyd639lf5ec6jlj')
 APP_NAME = os.getenv('APP_NAME', 'Habit Tracker').strip() or 'Habit Tracker'
 SANDBOX_GMAIL_ADDRESS = os.getenv('SANDBOX_GMAIL_ADDRESS', 'habittracker001@gmail.com').strip() or 'habittracker001@gmail.com'
@@ -100,12 +147,29 @@ MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY', '')
 MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET', '')
 MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE', '')
 MPESA_PASSKEY = os.getenv('MPESA_PASSKEY', '')
-APP_BASE_URL = os.getenv('APP_BASE_URL', '').rstrip('/')
+if not APP_BASE_URL:
+    APP_BASE_URL = normalize_origin(VERCEL_URL) or normalize_origin(VERCEL_PROJECT_PRODUCTION_URL)
+else:
+    APP_BASE_URL = normalize_origin(APP_BASE_URL)
+
+CSRF_TRUSTED_ORIGINS = env_list('CSRF_TRUSTED_ORIGINS', '')
+append_unique(
+    CSRF_TRUSTED_ORIGINS,
+    APP_BASE_URL,
+    normalize_origin(VERCEL_URL),
+    normalize_origin(VERCEL_PROJECT_PRODUCTION_URL),
+)
+if VERCEL_ENABLED or VERCEL_URL or VERCEL_PROJECT_PRODUCTION_URL:
+    append_unique(CSRF_TRUSTED_ORIGINS, 'https://*.vercel.app')
+
 MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL', '').strip()
 if not MPESA_CALLBACK_URL and APP_BASE_URL:
     MPESA_CALLBACK_URL = f'{APP_BASE_URL}/mpesa/callback/'
 MPESA_TRANSACTION_TYPE = os.getenv('MPESA_TRANSACTION_TYPE', 'CustomerPayBillOnline')
 MPESA_PARTYB = os.getenv('MPESA_PARTYB', '')
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 
 if not EMAIL_BACKEND:
     if EMAIL_HOST and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
