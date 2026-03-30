@@ -1,0 +1,101 @@
+{% extends 'tracker/base.html' %}
+{% load static %}
+
+{% block title %}Contact Us | Habit Tracker{% endblock %}
+{% block body_class %}page-contact{% endblock %}
+
+{% block content %}
+<section class="section-block">
+    <div class="row g-4 g-lg-5 justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="panel-card p-5">
+                <div class="text-center mb-5">
+                    <span class="section-kicker">Contact us</span>
+                    <h1 class="section-title mb-3">Questions about your habit journey?</h1>
+                    <p class="section-subtitle">Reach out for help with habit setup, weekly reviews, dashboard personalization, notifications, or donation questions. This page is part of the app experience, not a placeholder.</p>
+                </div>
+
+                <div class="row g-3 mb-5">
+                    <div class="col-md-4">
+                        <div class="timeline-card h-100">
+                            <span class="section-kicker">Habit help</span>
+                            <h2 class="section-title fs-5 mt-2">Tracking & progress</h2>
+                            <p class="muted-copy mb-0">Ask about daily logging, progress bars, charts, or calendar views when your routine is not behaving the way you expect.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="timeline-card h-100">
+                            <span class="section-kicker">Reviews</span>
+                            <h2 class="section-title fs-5 mt-2">Weekly reflections</h2>
+                            <p class="muted-copy mb-0">Get help with weekly notepad reflections, photo uploads, and the review prompts attached to each habit.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="timeline-card h-100">
+                            <span class="section-kicker">Support</span>
+                            <h2 class="section-title fs-5 mt-2">Donations & account</h2>
+                            <p class="muted-copy mb-0">Use this form for donation questions, account access issues, personalization settings, or general product feedback.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {% if messages %}
+                    <div class="message-stack mb-4">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} app-alert">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="auth-field mb-4">
+                            <label class="auth-field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="auth-field-help">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="auth-field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div class="d-grid">
+                        <button class="btn btn-gradient px-5 py-3 auth-submit" type="submit">
+                            <i class="fa-solid fa-paper-plane me-2"></i>
+                            Send Message
+                        </button>
+                    </div>
+                </form>
+
+                <div class="row g-3 mt-5 pt-4 border-top">
+                    <div class="col-md-4">
+                        <div class="text-center text-md-start">
+                            <p class="muted-copy mb-2">All inquiries go directly to <strong>{{ contact_recipient_email }}</strong></p>
+                            <p class="muted-copy mb-0">You never need to type the recipient address manually.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <p class="muted-copy mb-2">Typical response window</p>
+                            <p class="mb-0"><strong>24 to 48 hours</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center text-md-end">
+                            <p class="muted-copy mb-2">Need more context first?</p>
+                            <div class="d-flex justify-content-center justify-content-md-end gap-2 flex-wrap">
+                                <a class="btn btn-soft btn-sm" href="{% url 'privacy_policy' %}">Privacy Policy</a>
+                                {% if user.is_authenticated and not user.is_staff %}
+                                    <a class="btn btn-outline-app btn-sm" href="{% url 'donate' %}">Donations</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

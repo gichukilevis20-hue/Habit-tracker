@@ -1,0 +1,55 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Privacy Policy | Habit Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <div class="panel-card p-4 p-lg-5">
+            <span class="section-kicker">Privacy policy</span>
+            <h1 class="section-title">How your habit data is collected and used</h1>
+            <p class="section-subtitle">This page explains the data the app stores, why it stores it, and what the expectations are around uploads, notifications, exports, and donation records.</p>
+
+            <div class="timeline-card">
+                <h3>What we collect</h3>
+                <p class="mb-0">The app stores account details such as username, email address, gender, age, theme preferences, fonts, optional profile images, habit definitions, daily entries, weekly review notes, uploaded review photos, and donation records including method, amount, and payment reference details.</p>
+            </div>
+
+            <div class="timeline-card">
+                <h3>Why we collect it</h3>
+                <p class="mb-0">Profile settings personalize the interface. Habit and review data power the dashboard, charts, calendar, reminders, and exports. Donation data supports contribution history and admin visibility for project support activity.</p>
+            </div>
+
+            <div class="timeline-card">
+                <h3>Storage and retention</h3>
+                <p class="mb-0">Application data is stored in the configured database. Uploaded profile images and review photos are stored in the media directory configured for the project. In local development this project uses SQLite and a local media folder unless you replace them with production services.</p>
+            </div>
+
+            <div class="timeline-card">
+                <h3>Email reminders and notifications</h3>
+                <p class="mb-0">If email sending is enabled, the app may send personalized missed-habit reminders and weekly review prompts to the address attached to the account. Those reminders can include the habit title, goal details, and the reason you wrote down for wanting the habit so the message reflects your own data rather than generic copy. In local development, the default email backend writes those messages to the console rather than sending them externally.</p>
+            </div>
+
+            <div class="timeline-card">
+                <h3>Payments and donations</h3>
+                <p class="mb-0">Donation records may include M-Pesa phone numbers, Bitcoin wallet destinations, Lightning invoices, transaction references, statuses, and timestamps. If Daraja credentials are configured, M-Pesa requests can be forwarded to Safaricom’s Daraja API. Otherwise the project falls back to a local development-safe placeholder flow.</p>
+            </div>
+
+            <div class="timeline-card">
+                <h3>Sharing and access</h3>
+                <p class="mb-0">The application is designed not to share personal data by default. Staff users and Django admins may access user, habit, review, and donation data to maintain the system and monitor usage. If you deploy the app publicly, you should document who has staff access and why.</p>
+            </div>
+
+            <div class="timeline-card">
+                <h3>Your controls</h3>
+                <p class="mb-0">Users can update their profile information, change themes and fonts, upload or replace photos, delete habits, and export their stored habit records as CSV or text reports from the profile area.</p>
+            </div>
+
+            <div class="timeline-card mb-0">
+                <h3>Deployment responsibilities</h3>
+                <p class="mb-0">For production use, protect this app with HTTPS, strong secret management, secure media storage, restricted admin access, clear backup policies, and a retention policy appropriate to your users and local regulations.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

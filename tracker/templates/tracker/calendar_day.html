@@ -1,0 +1,96 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}{{ day|date:"M d, Y" }} | Habit Tracker{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="panel-card p-4">
+            <span class="section-kicker">Calendar detail</span>
+            <h1 class="section-title">{{ day|date:"l, F j, Y" }}</h1>
+            <p class="section-subtitle mb-0">Inspect what was logged on this day and which weekly reflections covered it.</p>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="stat-card">
+            <span class="section-kicker">Completed</span>
+            <div class="stat-value">{{ summary.completed_count }}</div>
+            <p class="muted-copy mb-0">Habits finished on this date.</p>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="stat-card">
+            <span class="section-kicker">Entries</span>
+            <div class="stat-value">{{ summary.total_entries }}</div>
+            <p class="muted-copy mb-0">Total habit logs on this date.</p>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="stat-card">
+            <span class="section-kicker">Reviews</span>
+            <div class="stat-value">{{ summary.review_count }}</div>
+            <p class="muted-copy mb-0">Weekly reflections that include this date.</p>
+        </div>
+    </div>
+
+    <div class="col-xl-7">
+        <div class="info-panel h-100">
+            <span class="section-kicker">Habit logs</span>
+            <h2 class="section-title">Entries</h2>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Habit</th>
+                            <th>Quantity</th>
+                            <th>Status</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in entries %}
+                            <tr>
+                                <td>{{ entry.habit.title }}</td>
+                                <td>{{ entry.quantity }} {{ entry.habit.unit }}</td>
+                                <td>
+                                    {% if entry.completed %}
+                                        <span class="badge-status success">Done</span>
+                                    {% else %}
+                                        <span class="badge-status pending">Open</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ entry.note|default:"No note added." }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4">No habit entries were logged on this day.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-5">
+        <div class="info-panel h-100">
+            <span class="section-kicker">Weekly reflections</span>
+            <h2 class="section-title">Review notes</h2>
+            {% for review in reviews %}
+                <div class="timeline-card">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <strong>{{ review.habit.title }}</strong>
+                        <span class="tiny-pill">{{ review.week_start|date:"M d" }} - {{ review.week_end|date:"M d" }}</span>
+                    </div>
+                    <p class="mt-3 mb-2"><strong>Went well:</strong> {{ review.what_went_well|default:"Nothing logged yet." }}</p>
+                    <p class="mb-2"><strong>Challenges:</strong> {{ review.what_didnt|default:"Nothing logged yet." }}</p>
+                    <p class="mb-0"><strong>Lessons:</strong> {{ review.lessons|default:"Nothing logged yet." }}</p>
+                </div>
+            {% empty %}
+                <p class="muted-copy mb-0">No weekly review notes cover this day yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

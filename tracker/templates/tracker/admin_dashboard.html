@@ -1,0 +1,531 @@
+{% extends 'tracker/admin_workspace_base.html' %}
+
+{% block admin_workspace_content %}
+{{ stats_chart|json_script:"admin-stats-chart" }}
+
+<section class="section-block">
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-3">
+            <div class="stat-card admin-stat-card">
+                <span class="section-kicker">Accounts</span>
+                <div class="stat-value">{{ stats.user_count }}</div>
+                <p class="muted-copy mb-0">{{ stats.staff_users }} staff · {{ stats.users_never_logged_in }} never logged in</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="stat-card admin-stat-card">
+                <span class="section-kicker">Habits</span>
+                <div class="stat-value">{{ system_stats.habit_count }}</div>
+                <p class="muted-copy mb-0">{{ system_stats.active_habits }} active · {{ system_stats.entries_today }} entries today</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="stat-card admin-stat-card">
+                <span class="section-kicker">Donations</span>
+                <div class="stat-value">{{ system_stats.completed_donations_total }}</div>
+                <p class="muted-copy mb-0">{{ donation_breakdown|length }} payment channels tracked</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="stat-card admin-stat-card">
+                <span class="section-kicker">Outreach</span>
+                <div class="stat-value">{{ admin_email_stats.total }}</div>
+                <p class="muted-copy mb-0">{{ admin_email_stats.sent }} sent · {{ admin_email_stats.failed }} failed</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="row g-4">
+        <div class="col-lg-6 col-xxl-3">
+            <div class="admin-command-card h-100">
+                <div class="admin-command-head">
+                    <span class="admin-command-icon"><i class="fa-solid fa-users"></i></span>
+                    <div>
+                        <span class="section-kicker">Users</span>
+                        <h2 class="section-title mb-0">Member Directory</h2>
+                    </div>
+                </div>
+                <p class="muted-copy">Create staff or member accounts, edit profiles, and clean up old records.</p>
+                <div class="admin-command-meta">
+                    <span class="tiny-pill">{{ stats.user_count }} total</span>
+                    <span class="tiny-pill">{{ stats.inactive_users }} inactive</span>
+                </div>
+                <div class="action-row mt-3">
+                    <a class="btn btn-gradient" href="{% url 'admin_users' %}">Open Users</a>
+                    <a class="btn btn-soft" href="{% url 'admin_user_create' %}">Add User</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-xxl-3">
+            <div class="admin-command-card h-100">
+                <div class="admin-command-head">
+                    <span class="admin-command-icon"><i class="fa-solid fa-list-check"></i></span>
+                    <div>
+                        <span class="section-kicker">Habits</span>
+                        <h2 class="section-title mb-0">Tracking Control</h2>
+                    </div>
+                </div>
+                <p class="muted-copy">Adjust habit owners, cadence, targets, reminders, and active status from one screen.</p>
+                <div class="admin-command-meta">
+                    <span class="tiny-pill">{{ system_stats.habit_count }} total</span>
+                    <span class="tiny-pill">{{ system_stats.reviews_this_week }} reviews this week</span>
+                </div>
+                <div class="action-row mt-3">
+                    <a class="btn btn-gradient" href="{% url 'admin_habits' %}">Open Habits</a>
+                    <a class="btn btn-soft" href="{% url 'admin_habit_create' %}">Add Habit</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-xxl-3">
+            <div class="admin-command-card h-100">
+                <div class="admin-command-head">
+                    <span class="admin-command-icon"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+                    <div>
+                        <span class="section-kicker">Donations</span>
+                        <h2 class="section-title mb-0">Payment Tracking</h2>
+                    </div>
+                </div>
+                <p class="muted-copy">Review payment references, mark statuses, and correct records without changing payment flows.</p>
+                <div class="admin-command-meta">
+                    <span class="tiny-pill">{{ system_stats.completed_donations_total }} completed</span>
+                </div>
+                <div class="action-row mt-3">
+                    <a class="btn btn-gradient" href="{% url 'admin_donations' %}">Open Donations</a>
+                    <a class="btn btn-soft" href="{% url 'admin_donation_create' %}">Add Donation</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-xxl-3">
+            <div class="admin-command-card h-100">
+                <div class="admin-command-head">
+                    <span class="admin-command-icon"><i class="fa-solid fa-envelope-open-text"></i></span>
+                    <div>
+                        <span class="section-kicker">Messages</span>
+                        <h2 class="section-title mb-0">Communications Hub</h2>
+                    </div>
+                </div>
+                <p class="muted-copy">Review every user email delivered to {{ contact_recipient_email }}, then send personal follow-ups to any member without leaving the workspace.</p>
+                <div class="admin-command-meta">
+                    <span class="tiny-pill">{{ contact_message_stats.total }} inbox messages</span>
+                    <span class="tiny-pill">{{ admin_email_stats.sent }} staff emails sent</span>
+                    <span class="tiny-pill">{{ email_delivery_status.smtp_transport_label }}</span>
+                </div>
+                {% if not email_delivery_status.smtp_enabled %}
+                    <p class="muted-copy small mt-3 mb-0">SMTP is not active yet, so email delivery will stay local until the Gmail credentials are configured.</p>
+                {% elif not email_delivery_status.smtp_sender_matches_sandbox %}
+                    <p class="muted-copy small mt-3 mb-0">SMTP is authenticated as {{ email_delivery_status.smtp_sender_email }}. Update the Gmail app-password settings if you want the sender identity to match {{ contact_recipient_email }} exactly.</p>
+                {% endif %}
+                <div class="action-row mt-3">
+                    <a class="btn btn-gradient" href="{% url 'admin_messages' %}">Open Inbox</a>
+                    <a class="btn btn-soft" href="#admin-email-composer">Compose Email</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block" id="admin-email-composer">
+    <div class="row g-4">
+        <div class="col-12 col-xl-6">
+            <div class="admin-table-card h-100">
+                <div class="admin-section-head">
+                    <div>
+                        <span class="section-kicker">Outreach</span>
+                        <h2 class="section-title mb-0">Send a personalized email</h2>
+                        <p class="muted-copy mb-0 mt-2">Choose any member account, send through the configured app mail backend, and keep the delivery result logged in this workspace.</p>
+                    </div>
+                    {% if selected_compose_user %}
+                        <span class="tiny-pill">Composing for {{ selected_compose_user.username }}</span>
+                    {% endif %}
+                </div>
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    {% if admin_email_form.non_field_errors %}
+                        <div class="auth-field-error mb-3">{{ admin_email_form.non_field_errors }}</div>
+                    {% endif %}
+                    {% for field in admin_email_form %}
+                        <div class="form-group">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="auth-field-help">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="auth-field-error">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div class="d-flex flex-wrap gap-2 align-items-center mt-3">
+                        <button class="btn btn-gradient" type="submit">Send Email</button>
+                        <a class="btn btn-soft" href="{% url 'admin_users' %}">Manage Users</a>
+                        <span class="tiny-pill">From {{ email_delivery_status.smtp_sender_email }}</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-12 col-xl-6">
+            <div class="admin-table-card h-100">
+                <div class="admin-section-head">
+                    <div>
+                        <span class="section-kicker">Monitoring</span>
+                        <h2 class="section-title mb-0">Recent staff emails</h2>
+                        <p class="muted-copy mb-0 mt-2">Every admin-sent email is logged here with recipient, sender, subject, and delivery status.</p>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="tiny-pill">{{ admin_email_stats.total }} total</span>
+                        <span class="tiny-pill">{{ admin_email_stats.sent }} sent</span>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-3 mt-3">
+                    {% for admin_email in preview_admin_emails %}
+                        <div class="timeline-card">
+                            <div class="d-flex justify-content-between gap-3 align-items-start flex-wrap">
+                                <div>
+                                    <strong>{{ admin_email.subject }}</strong>
+                                    <p class="muted-copy mb-1">{{ admin_email.recipient_name }} · {{ admin_email.recipient_email }}</p>
+                                    <p class="muted-copy small mb-1">Sent by {{ admin_email.sent_by.username|default:"staff" }} · {{ admin_email.created_at|date:"Y-m-d H:i" }}</p>
+                                    <div class="muted-copy small mb-0">{{ admin_email.message_body|linebreaksbr }}</div>
+                                </div>
+                                <div class="d-flex flex-column align-items-start gap-2">
+                                    <span class="badge-status {% if admin_email.delivery_status == 'sent' %}success{% elif admin_email.delivery_status == 'failed' %}failed{% else %}pending{% endif %}">
+                                        {{ admin_email.get_delivery_status_display }}
+                                    </span>
+                                    {% if admin_email.delivery_error %}
+                                        <span class="muted-copy small">{{ admin_email.delivery_error|truncatechars:70 }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="timeline-card">
+                            <p class="muted-copy mb-0">No staff emails have been sent from the workspace yet.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="admin-table-card h-100">
+                <div class="admin-section-head">
+                    <div>
+                        <span class="section-kicker">System Health</span>
+                        <h2 class="section-title mb-0">Activity Snapshot</h2>
+                    </div>
+                    <span class="tiny-pill">{{ today|date:"M d, Y" }}</span>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6 col-xl-3">
+                        <div class="timeline-card h-100">
+                            <strong>Entries Today</strong>
+                            <div class="stat-value fs-2">{{ system_stats.entries_today }}</div>
+                            <p class="muted-copy mb-0">Habit logs created today</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3">
+                        <div class="timeline-card h-100">
+                            <strong>Reviews This Week</strong>
+                            <div class="stat-value fs-2">{{ system_stats.reviews_this_week }}</div>
+                            <p class="muted-copy mb-0">Weekly reflections stored</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3">
+                        <div class="timeline-card h-100">
+                            <strong>Logged-In Members</strong>
+                            <div class="stat-value fs-2">{{ stats.logged_in_users }}</div>
+                            <p class="muted-copy mb-0">Accounts with at least one login</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xl-3">
+                        <div class="timeline-card h-100">
+                            <strong>Needs Onboarding</strong>
+                            <div class="stat-value fs-2">{{ stats.users_without_habits }}</div>
+                            <p class="muted-copy mb-0">Members without habits yet</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-surface mt-4">
+                    <canvas id="adminDonationChart" height="140"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="info-panel h-100">
+                <div class="admin-section-head">
+                    <div>
+                        <span class="section-kicker">Engagement</span>
+                        <h2 class="section-title mb-0">Top Active Members</h2>
+                    </div>
+                    <a class="btn btn-soft btn-sm" href="{% url 'admin_users' %}?user_activity=with_habits">View all</a>
+                </div>
+                <div class="d-flex flex-column gap-3 mt-3">
+                    {% for user_row in top_users %}
+                        <div class="timeline-card">
+                            <div class="d-flex justify-content-between gap-3 align-items-start">
+                                <div>
+                                    <strong>{{ user_row.username }}</strong>
+                                    <p class="muted-copy mb-1">{{ user_row.full_name_display }}</p>
+                                    <p class="muted-copy mb-0 small">{{ user_row.entry_count }} entries · {{ user_row.review_count }} reviews</p>
+                                </div>
+                                <a class="btn btn-outline-app btn-sm" href="{% url 'admin_user_edit' user_row.id %}">Edit</a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="timeline-card">
+                            <p class="muted-copy mb-0">User activity will appear here as members start tracking habits.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="row g-4">
+        <div class="col-12 col-xxl-6">
+            <div class="admin-table-card h-100">
+                <div class="admin-section-head">
+                    <div>
+                        <span class="section-kicker">Users</span>
+                        <h2 class="section-title mb-0">Recent Directory Snapshot</h2>
+                    </div>
+                    <a class="btn btn-soft btn-sm" href="{% url 'admin_users' %}">Manage Users</a>
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Access</th>
+                                <th>Habits</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user_row in preview_users %}
+                                <tr>
+                                    <td>
+                                        <div class="admin-user-block">
+                                            <span class="admin-user-avatar {% if user_row.dashboard_profile and user_row.dashboard_profile.profile_image_url %}has-image{% endif %}">
+                                                {% if user_row.dashboard_profile and user_row.dashboard_profile.profile_image_url %}
+                                                    <img
+                                                        src="{{ user_row.dashboard_profile.profile_image_url }}"
+                                                        alt="{{ user_row.username }} avatar"
+                                                        class="avatar-image"
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                        onerror="this.parentElement.classList.remove('has-image'); this.remove();"
+                                                    />
+                                                {% endif %}
+                                                <span class="avatar-fallback">{{ user_row.username|first|upper }}</span>
+                                            </span>
+                                            <div>
+                                                <strong>{{ user_row.username }}</strong>
+                                                <div class="muted-copy small">{{ user_row.email|default:"No email" }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            {% if user_row.is_staff %}
+                                                <span class="badge-status success">Staff</span>
+                                            {% else %}
+                                                <span class="badge-status pending">Member</span>
+                                            {% endif %}
+                                            {% if user_row.email %}
+                                                <span class="tiny-pill">Email ready</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>{{ user_row.habit_count }} total · {{ user_row.active_habit_count }} active</td>
+                                    <td>
+                                        <div class="admin-action-list">
+                                            <a class="btn btn-outline-app btn-sm" href="{% url 'admin_user_edit' user_row.id %}">Edit</a>
+                                            {% if user_row.email %}
+                                                <a class="btn btn-soft btn-sm" href="{% url 'admin_dashboard' %}?compose_user={{ user_row.id }}#admin-email-composer">Email</a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4">No users yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xxl-6">
+            <div class="admin-table-card h-100">
+                <div class="admin-section-head">
+                    <div>
+                        <span class="section-kicker">Habits</span>
+                        <h2 class="section-title mb-0">Newest Habits</h2>
+                    </div>
+                    <a class="btn btn-soft btn-sm" href="{% url 'admin_habits' %}">Manage Habits</a>
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Habit</th>
+                                <th>Owner</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for habit in preview_habits %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ habit.title }}</strong>
+                                        <div class="muted-copy small">{{ habit.get_unit_display }} · {{ habit.target_value }}</div>
+                                    </td>
+                                    <td>{{ habit.user.username }}</td>
+                                    <td>
+                                        {% if habit.is_active %}
+                                            <span class="badge-status success">Active</span>
+                                        {% else %}
+                                            <span class="badge-status failed">Paused</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><a class="btn btn-outline-app btn-sm" href="{% url 'admin_habit_edit' habit.id %}">Edit</a></td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4">No habits yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xxl-6">
+            <div class="admin-table-card h-100">
+                <div class="admin-section-head">
+                    <div>
+                        <span class="section-kicker">Donations</span>
+                        <h2 class="section-title mb-0">Latest Payment Records</h2>
+                    </div>
+                    <a class="btn btn-soft btn-sm" href="{% url 'admin_donations' %}">Manage Donations</a>
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Method</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in preview_donations %}
+                                <tr>
+                                    <td>{{ donation.user.username|default:"Anonymous" }}</td>
+                                    <td>
+                                        {{ donation.get_method_display }}
+                                        {% if donation.transaction_id %}
+                                            <div class="muted-copy small">{{ donation.transaction_id }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ donation.amount }} {{ donation.currency }}</td>
+                                    <td>
+                                        <span class="badge-status {% if donation.status == 'completed' %}success{% elif donation.status == 'failed' %}failed{% else %}pending{% endif %}">
+                                            {{ donation.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4">No donations yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xxl-6">
+            <div class="admin-table-card h-100">
+                <div class="admin-section-head">
+                    <div>
+                        <span class="section-kicker">Messages</span>
+                        <h2 class="section-title mb-0">Sandbox Inbox</h2>
+                        <p class="muted-copy mb-0 mt-2">All user emails routed to {{ contact_recipient_email }}. SMTP sender: {{ email_delivery_status.smtp_sender_email }}</p>
+                        {% if not email_delivery_status.smtp_enabled %}
+                            <p class="muted-copy small mb-0 mt-2">SMTP is currently disabled, so the sandbox inbox view is driven by stored contact records until credentials are enabled.</p>
+                        {% elif not email_delivery_status.smtp_sender_matches_sandbox %}
+                            <p class="muted-copy small mb-0 mt-2">The authenticated sender does not yet match the sandbox inbox address. The dashboard shows the live sender so you can verify the configuration safely.</p>
+                        {% endif %}
+                    </div>
+                    <a class="btn btn-soft btn-sm" href="{% url 'admin_messages' %}">Open Inbox</a>
+                </div>
+                <div class="d-flex flex-column gap-3 mt-3">
+                    {% for contact_message in preview_messages %}
+                        <div class="timeline-card">
+                            <div class="d-flex justify-content-between gap-3 align-items-start flex-wrap">
+                                <div>
+                                    <strong>{{ contact_message.subject|default:"General Inquiry" }}</strong>
+                                    <p class="muted-copy mb-1">{{ contact_message.sender_name }} · {{ contact_message.sender_email }}</p>
+                                    <p class="muted-copy small mb-1">To {{ contact_message.recipient_email }} · {{ contact_message.created_at|date:"Y-m-d H:i" }}</p>
+                                    <div class="muted-copy small mb-0">{{ contact_message.message_body|linebreaksbr }}</div>
+                                </div>
+                                <div class="d-flex flex-column align-items-start gap-2">
+                                    <span class="badge-status {% if contact_message.delivery_status == 'sent' %}success{% elif contact_message.delivery_status == 'failed' %}failed{% else %}pending{% endif %}">
+                                        {{ contact_message.get_delivery_status_display }}
+                                    </span>
+                                    <a class="btn btn-outline-app btn-sm" href="{% url 'admin_message_detail' contact_message.id %}">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="timeline-card">
+                            <p class="muted-copy mb-0">No user emails have reached the sandbox inbox yet.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const adminStats = JSON.parse(document.getElementById('admin-stats-chart').textContent);
+const adminChartCanvas = document.getElementById('adminDonationChart');
+if (adminChartCanvas) {
+    new Chart(adminChartCanvas, {
+        type: 'doughnut',
+        data: {
+            labels: adminStats.labels,
+            datasets: [{
+                data: adminStats.counts,
+                backgroundColor: ['#3256ff', '#ff7a59', '#19b28b'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'tracker/admin_workspace_base.html' %}
+
+{% block admin_workspace_content %}
+<section class="section-block">
+    <div class="admin-table-card">
+        <div class="admin-section-head">
+            <div>
+                <span class="section-kicker">Habits</span>
+                <h2 class="section-title mb-0">Habit Records</h2>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="tiny-pill">{{ visible_habit_count }} results</span>
+                <a class="btn btn-gradient" href="{% url 'admin_habit_create' %}"><i class="fa-solid fa-plus me-2"></i>Add Habit</a>
+            </div>
+        </div>
+
+        <form method="get" class="admin-filter-grid admin-filter-grid-wide mt-4">
+            <div>
+                <label class="form-label" for="habit_q">Search</label>
+                <input class="form-control" id="habit_q" name="habit_q" value="{{ habit_search_query }}" placeholder="Title, description, area, or member" />
+            </div>
+            <div>
+                <label class="form-label" for="habit_status">Status</label>
+                <select class="form-select" id="habit_status" name="habit_status">
+                    {% for option in habit_status_options %}
+                        <option value="{{ option.value }}" {% if habit_status_filter == option.value %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="habit_unit">Unit</label>
+                <select class="form-select" id="habit_unit" name="habit_unit">
+                    {% for option in habit_unit_options %}
+                        <option value="{{ option.value }}" {% if habit_unit_filter == option.value %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="habit_user">Member</label>
+                <select class="form-select" id="habit_user" name="habit_user">
+                    {% for option in habit_user_options %}
+                        <option value="{{ option.value }}" {% if habit_user_filter == option.value %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="admin-filter-actions">
+                <button class="btn btn-gradient" type="submit">Apply</button>
+                <a class="btn btn-soft" href="{% url 'admin_habits' %}">Reset</a>
+            </div>
+        </form>
+
+        <div class="table-responsive mt-4">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Habit</th>
+                        <th>Owner</th>
+                        <th>Cadence</th>
+                        <th>Performance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for habit in habits %}
+                        <tr>
+                            <td>
+                                <strong>{{ habit.title }}</strong>
+                                <div class="muted-copy small">{{ habit.description|default:"No description" }}</div>
+                                <div class="muted-copy small">Area: {{ habit.area|default:"General" }}</div>
+                            </td>
+                            <td>
+                                <div class="muted-copy small">{{ habit.user.username }}</div>
+                                <div class="muted-copy small">{{ habit.user.email|default:"No email" }}</div>
+                            </td>
+                            <td>
+                                <div class="muted-copy small">{{ habit.get_unit_display }} target: {{ habit.target_value }}</div>
+                                <div class="muted-copy small">{{ habit.get_repeat_display }} · every {{ habit.every_n_days }} day{{ habit.every_n_days|pluralize }}</div>
+                                <div class="muted-copy small">Starts {{ habit.start_date|date:"Y-m-d" }}</div>
+                            </td>
+                            <td>
+                                {% if habit.is_active %}
+                                    <span class="badge-status success">Active</span>
+                                {% else %}
+                                    <span class="badge-status failed">Paused</span>
+                                {% endif %}
+                                <div class="muted-copy small mt-2">{{ habit.entry_count }} entries · {{ habit.review_count }} reviews</div>
+                                <div class="muted-copy small">Last entry: {{ habit.last_entry_date|date:"Y-m-d"|default:"None" }}</div>
+                            </td>
+                            <td>
+                                <div class="admin-action-list">
+                                    <a class="btn btn-outline-app btn-sm" href="{% url 'admin_habit_edit' habit.id %}">Edit</a>
+                                    <a class="btn btn-soft btn-sm" href="{% url 'admin_user_edit' habit.user_id %}">Owner</a>
+                                    <a class="btn btn-danger btn-sm" href="{% url 'admin_habit_delete' habit.id %}">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5">No habits match the current filters.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

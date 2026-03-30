@@ -1,0 +1,164 @@
+{% extends 'tracker/admin_workspace_base.html' %}
+
+{% block admin_workspace_content %}
+<section class="section-block">
+    <div class="admin-table-card">
+        <div class="admin-section-head">
+            <div>
+                <span class="section-kicker">Inbox</span>
+                <h2 class="section-title mb-0">Sandbox Gmail Inbox</h2>
+                <p class="muted-copy mb-0 mt-2">User emails routed to {{ contact_recipient_email }} through the public contact form. SMTP sender: {{ email_delivery_status.smtp_sender_email }}</p>
+                {% if not email_delivery_status.smtp_enabled %}
+                    <p class="muted-copy small mb-0 mt-2">SMTP is not active yet, so this inbox is showing the app's stored user-message records until Gmail credentials are enabled.</p>
+                {% elif not email_delivery_status.smtp_sender_matches_sandbox %}
+                    <p class="muted-copy small mb-0 mt-2">The authenticated sender does not yet match the sandbox inbox address. Update the Gmail app-password settings when you want outgoing sender identity to match {{ contact_recipient_email }} exactly.</p>
+                {% endif %}
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="tiny-pill">{{ visible_message_count }} results</span>
+                <span class="tiny-pill">{{ email_delivery_status.smtp_transport_label }}</span>
+            </div>
+        </div>
+
+        <form method="get" class="admin-filter-grid mt-4">
+            <div>
+                <label class="form-label" for="message_q">Search</label>
+                <input class="form-control" id="message_q" name="message_q" value="{{ message_search_query }}" placeholder="Sender, subject, body, or recipient" />
+            </div>
+            <div>
+                <label class="form-label" for="message_status">Status</label>
+                <select class="form-select" id="message_status" name="message_status">
+                    {% for option in message_status_options %}
+                        <option value="{{ option.value }}" {% if message_status_filter == option.value %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="admin-filter-actions">
+                <button class="btn btn-gradient" type="submit">Apply</button>
+                <a class="btn btn-soft" href="{% url 'admin_messages' %}">Reset</a>
+            </div>
+        </form>
+
+        <div class="table-responsive mt-4">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Message</th>
+                        <th>Sender</th>
+                        <th>Delivery</th>
+                        <th>Linked Account</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contact_message in contact_messages %}
+                        <tr>
+                            <td>
+                                <strong>{{ contact_message.subject|default:"General Inquiry" }}</strong>
+                                <div class="muted-copy small mt-1">{{ contact_message.message_body|linebreaksbr }}</div>
+                                <div class="muted-copy small">{{ contact_message.created_at|date:"Y-m-d H:i" }}</div>
+                            </td>
+                            <td>
+                                <div class="muted-copy small">{{ contact_message.sender_name }}</div>
+                                <div class="muted-copy small">{{ contact_message.sender_email }}</div>
+                                <div class="muted-copy small">To {{ contact_message.recipient_email }}</div>
+                            </td>
+                            <td>
+                                <span class="badge-status {% if contact_message.delivery_status == 'sent' %}success{% elif contact_message.delivery_status == 'failed' %}failed{% else %}pending{% endif %}">
+                                    {{ contact_message.get_delivery_status_display }}
+                                </span>
+                                {% if contact_message.delivery_error %}
+                                    <div class="muted-copy small mt-2">{{ contact_message.delivery_error|truncatechars:80 }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if contact_message.user %}
+                                    <a href="{% url 'admin_user_edit' contact_message.user_id %}">{{ contact_message.user.username }}</a>
+                                {% else %}
+                                    <span class="muted-copy">Anonymous</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="admin-action-list">
+                                    <a class="btn btn-outline-app btn-sm" href="{% url 'admin_message_detail' contact_message.id %}">View</a>
+                                    <a class="btn btn-danger btn-sm" href="{% url 'admin_message_delete' contact_message.id %}">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5">No messages match the current filters.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="admin-table-card">
+        <div class="admin-section-head">
+            <div>
+                <span class="section-kicker">Outreach log</span>
+                <h2 class="section-title mb-0">Staff emails sent from the workspace</h2>
+                <p class="muted-copy mb-0 mt-2">These messages were sent from the front-facing admin dashboard, not Django admin.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="tiny-pill">{{ admin_email_stats.total }} total</span>
+                <span class="tiny-pill">{{ admin_email_stats.sent }} sent</span>
+                <a class="btn btn-soft btn-sm" href="{% url 'admin_dashboard' %}#admin-email-composer">Compose Email</a>
+            </div>
+        </div>
+
+        <div class="table-responsive mt-4">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Recipient</th>
+                        <th>Message</th>
+                        <th>Sent By</th>
+                        <th>Delivery</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin_email in sent_admin_emails %}
+                        <tr>
+                            <td>
+                                <strong>{{ admin_email.recipient_name }}</strong>
+                                <div class="muted-copy small">{{ admin_email.recipient_email }}</div>
+                                {% if admin_email.recipient_user %}
+                                    <div class="muted-copy small">
+                                        <a href="{% url 'admin_user_edit' admin_email.recipient_user_id %}">{{ admin_email.recipient_user.username }}</a>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ admin_email.subject }}</strong>
+                                <div class="muted-copy small mt-1">{{ admin_email.message_body|linebreaksbr }}</div>
+                                <div class="muted-copy small">{{ admin_email.created_at|date:"Y-m-d H:i" }}</div>
+                            </td>
+                            <td>
+                                <div class="muted-copy small">{{ admin_email.sent_by.username|default:"staff" }}</div>
+                                <div class="muted-copy small">{{ admin_email.sent_by.email|default:"No sender email" }}</div>
+                            </td>
+                            <td>
+                                <span class="badge-status {% if admin_email.delivery_status == 'sent' %}success{% elif admin_email.delivery_status == 'failed' %}failed{% else %}pending{% endif %}">
+                                    {{ admin_email.get_delivery_status_display }}
+                                </span>
+                                {% if admin_email.delivery_error %}
+                                    <div class="muted-copy small mt-2">{{ admin_email.delivery_error|truncatechars:80 }}</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">No staff emails have been sent from the workspace yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

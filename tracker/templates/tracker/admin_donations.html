@@ -1,0 +1,112 @@
+{% extends 'tracker/admin_workspace_base.html' %}
+
+{% block admin_workspace_content %}
+<section class="section-block">
+    <div class="admin-table-card">
+        <div class="admin-section-head">
+            <div>
+                <span class="section-kicker">Donations</span>
+                <h2 class="section-title mb-0">Donation Records</h2>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="tiny-pill">{{ visible_donation_count }} results</span>
+                <a class="btn btn-gradient" href="{% url 'admin_donation_create' %}"><i class="fa-solid fa-plus me-2"></i>Add Donation</a>
+            </div>
+        </div>
+
+        <form method="get" class="admin-filter-grid admin-filter-grid-wide mt-4">
+            <div>
+                <label class="form-label" for="donation_q">Search</label>
+                <input class="form-control" id="donation_q" name="donation_q" value="{{ donation_search_query }}" placeholder="Member, phone, wallet, reference, or status note" />
+            </div>
+            <div>
+                <label class="form-label" for="donation_status">Status</label>
+                <select class="form-select" id="donation_status" name="donation_status">
+                    {% for option in donation_status_options %}
+                        <option value="{{ option.value }}" {% if donation_status_filter == option.value %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="donation_method">Method</label>
+                <select class="form-select" id="donation_method" name="donation_method">
+                    {% for option in donation_method_options %}
+                        <option value="{{ option.value }}" {% if donation_method_filter == option.value %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="donation_user">Member</label>
+                <select class="form-select" id="donation_user" name="donation_user">
+                    {% for option in donation_user_options %}
+                        <option value="{{ option.value }}" {% if donation_user_filter == option.value %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="admin-filter-actions">
+                <button class="btn btn-gradient" type="submit">Apply</button>
+                <a class="btn btn-soft" href="{% url 'admin_donations' %}">Reset</a>
+            </div>
+        </form>
+
+        <div class="table-responsive mt-4">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Method</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Reference</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donation in donations %}
+                        <tr>
+                            <td>
+                                <strong>{{ donation.user.username|default:"Anonymous" }}</strong>
+                                <div class="muted-copy small">{{ donation.user.email|default:"No account attached" }}</div>
+                            </td>
+                            <td>
+                                <div class="muted-copy small">{{ donation.get_method_display }}</div>
+                                {% if donation.phone_number %}
+                                    <div class="muted-copy small">{{ donation.phone_number }}</div>
+                                {% elif donation.wallet_address %}
+                                    <div class="muted-copy small">{{ donation.wallet_address|truncatechars:24 }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ donation.amount }} {{ donation.currency }}</strong>
+                                <div class="muted-copy small">{{ donation.created_at|date:"Y-m-d H:i" }}</div>
+                            </td>
+                            <td>
+                                <span class="badge-status {% if donation.status == 'completed' %}success{% elif donation.status == 'failed' %}failed{% else %}pending{% endif %}">
+                                    {{ donation.get_status_display }}
+                                </span>
+                                {% if donation.status_message %}
+                                    <div class="muted-copy small mt-2">{{ donation.status_message|truncatechars:90 }}</div>
+                                {% endif %}
+                            </td>
+                            <td>{{ donation.transaction_id|default:"No reference" }}</td>
+                            <td>
+                                <div class="admin-action-list">
+                                    <a class="btn btn-outline-app btn-sm" href="{% url 'admin_donation_edit' donation.id %}">Edit</a>
+                                    {% if donation.user_id %}
+                                        <a class="btn btn-soft btn-sm" href="{% url 'admin_user_edit' donation.user_id %}">User</a>
+                                    {% endif %}
+                                    <a class="btn btn-danger btn-sm" href="{% url 'admin_donation_delete' donation.id %}">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6">No donations match the current filters.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

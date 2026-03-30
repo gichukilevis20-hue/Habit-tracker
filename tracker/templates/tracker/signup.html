@@ -1,0 +1,86 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Create Account | Habit Tracker{% endblock %}
+{% block body_class %}auth-page auth-page-signup{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+    <div class="row g-5 align-items-center justify-content-center">
+        <div class="col-lg-6 order-lg-2">
+            <div class="auth-form-panel">
+                <div class="auth-panel-top mb-4">
+                    <span class="section-kicker">Join in</span>
+                </div>
+
+                <h2 class="auth-panel-title mb-2">Create your habit space</h2>
+                <p class="auth-panel-subtitle mb-4">Set up your account, choose your vibe, and start tracking with a dashboard that feels like yours from the first login.</p>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mb-4" role="alert">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" novalidate class="form-stack">
+                    {% csrf_token %}
+                    {% include 'tracker/partials/auth_form_fields.html' with form=form %}
+                    <button class="btn btn-gradient w-100 btn-lg mt-2" type="submit">Create Account</button>
+                </form>
+
+                {% if social_login_providers %}
+                    <div class="social-auth-divider"><span>or continue with</span></div>
+                    <div class="social-auth-grid">
+                        {% for provider in social_login_providers %}
+                            {% if provider.is_configured %}
+                                <form method="post" action="{{ provider.login_url }}" class="social-auth-form">
+                                    {% csrf_token %}
+                                    <button class="btn btn-social w-100" type="submit">
+                                        <i class="{{ provider.icon }}"></i>
+                                        Continue with {{ provider.label }}
+                                    </button>
+                                </form>
+                            {% else %}
+                                <div class="social-auth-form">
+                                    <button class="btn btn-social w-100 is-unavailable" type="button" aria-disabled="true" tabindex="-1">
+                                        <i class="{{ provider.icon }}"></i>
+                                        Continue with {{ provider.label }}
+                                        <span class="social-auth-badge">Setup needed</span>
+                                    </button>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if social_login_unconfigured_count %}
+                        <p class="auth-field-help mt-3 mb-2">{{ social_login_unconfigured_count }} social provider{{ social_login_unconfigured_count|pluralize }} still need server OAuth credentials before sign-in can start.</p>
+                    {% endif %}
+                    <p class="auth-field-help mt-3 mb-0">We only pull the profile basics needed for your account here: name, email, and avatar when the provider sends one. Your existing app profile stays in control.</p>
+                {% endif %}
+
+                <div class="auth-footer-copy text-center">
+                    <p class="muted-copy mb-0">
+                        Already have an account?
+                        <a href="{% url 'login' %}" class="fw-semibold">Sign in here.</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 order-lg-1 d-none d-lg-block">
+            <div class="auth-visual-card">
+                <div class="auth-visual-overlay">
+                    <span class="section-kicker text-white mb-3">Design your own pace</span>
+                    <h1 class="auth-visual-title display-4">Make the app feel like your routine, not just another form.</h1>
+                    <p class="auth-visual-copy mt-4">Start with a clean setup, then shape your dashboard with colors, fonts, and focus areas that make consistency easier to return to.</p>
+                    <div class="auth-chip-row mt-4">
+                        <span class="auth-chip"><i class="fa-solid fa-bolt"></i> Track daily momentum</span>
+                        <span class="auth-chip"><i class="fa-solid fa-brush"></i> Style the dashboard</span>
+                        <span class="auth-chip"><i class="fa-solid fa-book-open"></i> Review each week</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Log {{ habit.title }} | Habit Tracker{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-xl-7">
+        <div class="form-panel p-4 p-lg-5">
+            <span class="section-kicker">Daily log</span>
+            <h1 class="section-title">{{ habit.title }}</h1>
+            <p class="section-subtitle">Record today’s quantity, mark it complete if you hit the goal, and leave yourself a short note while it’s fresh.</p>
+
+            <div class="atomic-blueprint-grid mb-4">
+                <div class="atomic-blueprint-card">
+                    <span class="section-kicker">Identity</span>
+                    <p class="mb-0">{{ habit.identity_focus }}</p>
+                </div>
+                <div class="atomic-blueprint-card">
+                    <span class="section-kicker">Tiny step</span>
+                    <p class="mb-0">{{ habit.tiny_step_focus }}</p>
+                </div>
+                <div class="atomic-blueprint-card">
+                    <span class="section-kicker">Stack cue</span>
+                    <p class="mb-0">{{ habit.stack_focus }}</p>
+                </div>
+                <div class="atomic-blueprint-card">
+                    <span class="section-kicker">Consistency</span>
+                    <p class="mb-0">{{ habit.consistency_focus }}</p>
+                </div>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% include 'tracker/partials/form_fields.html' with form=form %}
+                <div class="action-row">
+                    <button class="btn btn-gradient px-4" type="submit">Save Entry</button>
+                    <a class="btn btn-outline-app px-4" href="{% url 'home' %}">Back to dashboard</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="info-panel h-100">
+            <span class="section-kicker">Consistency cues</span>
+            <h2 class="section-title">Show up, then grow</h2>
+            <div class="atomic-stat-grid mt-3">
+                <div class="atomic-stat-card">
+                    <span>Show-up streak</span>
+                    <strong>{{ atomic_metrics.current_streak }}</strong>
+                    <small>days in a row</small>
+                </div>
+                <div class="atomic-stat-card">
+                    <span>Best streak</span>
+                    <strong>{{ atomic_metrics.best_streak }}</strong>
+                    <small>days all time</small>
+                </div>
+                <div class="atomic-stat-card">
+                    <span>Small wins</span>
+                    <strong>{{ atomic_metrics.small_wins }}</strong>
+                    <small>{{ atomic_metrics.window_label|lower }}</small>
+                </div>
+                <div class="atomic-stat-card">
+                    <span>Consistency</span>
+                    <strong>{{ atomic_metrics.consistency_rate }}%</strong>
+                    <small>show-up rate</small>
+                </div>
+            </div>
+            <div class="streak-track mt-3">
+                {% for day in atomic_metrics.days %}
+                    <span class="streak-day {% if day.won %}is-win{% endif %} {% if day.completed %}is-complete{% endif %}" title="{{ day.title }}">{{ day.label }}</span>
+                {% endfor %}
+            </div>
+            <p class="muted-copy mt-3 mb-0">A small win still counts even if today only matched the tiny starting version of the habit.</p>
+            <h2 class="section-title mt-4">Last 7 entries</h2>
+            <div class="timeline-card mt-3">
+                {% for entry in recent_entries %}
+                    <div class="d-flex justify-content-between align-items-start gap-3 py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div>
+                            <strong>{{ entry.date|date:"D, M j" }}</strong>
+                            <p class="muted-copy mb-0">{{ entry.note|default:"No note added." }}</p>
+                        </div>
+                        <div class="text-end">
+                            <div>{{ entry.quantity }} {{ habit.unit }}</div>
+                            {% if entry.completed %}
+                                <span class="badge-status success">Done</span>
+                            {% else %}
+                                <span class="badge-status pending">Open</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="muted-copy mb-0">Your recent entries will appear here once you start logging.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

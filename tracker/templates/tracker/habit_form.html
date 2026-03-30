@@ -1,0 +1,86 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}{{ title }} | Habit Tracker{% endblock %}
+
+{% block content %}
+<div class="row g-4 justify-content-center">
+    <div class="col-12">
+        <div class="hero-card">
+            <span class="hero-orb hero-orb-primary"></span>
+            <span class="hero-orb hero-orb-secondary"></span>
+            <span class="hero-kicker">Atomic Habit Builder</span>
+            <h1 class="hero-title mt-3">{{ title }}</h1>
+            <p class="hero-subtitle mt-3 mb-0">Build the habit around identity, start with a tiny version, attach it to an existing cue, and make consistency easier than intensity.</p>
+        </div>
+    </div>
+    <div class="col-xl-11">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="row g-4">
+                <div class="col-xl-7">
+                    <div class="form-panel p-4 p-lg-5 builder-section-card h-100">
+                        <span class="section-kicker">Formation side</span>
+                        <h2 class="section-title">Design the habit before you track it</h2>
+                        <p class="section-subtitle">The goal is not to force a perfect streak on day one. It is to make the next repetition obvious, small, and repeatable.</p>
+
+                        <div class="builder-principle-grid">
+                            <div class="builder-principle-card">
+                                <span class="builder-principle-icon"><i class="fa-solid fa-fingerprint"></i></span>
+                                <strong>Identity</strong>
+                                <p class="muted-copy mb-0">Choose the kind of person each repetition will reinforce.</p>
+                            </div>
+                            <div class="builder-principle-card">
+                                <span class="builder-principle-icon"><i class="fa-solid fa-seedling"></i></span>
+                                <strong>Start Small</strong>
+                                <p class="muted-copy mb-0">Shrink the habit until it feels too easy to skip.</p>
+                            </div>
+                            <div class="builder-principle-card">
+                                <span class="builder-principle-icon"><i class="fa-solid fa-link"></i></span>
+                                <strong>Habit Stack</strong>
+                                <p class="muted-copy mb-0">Attach the habit to a routine that already happens.</p>
+                            </div>
+                            <div class="builder-principle-card">
+                                <span class="builder-principle-icon"><i class="fa-solid fa-repeat"></i></span>
+                                <strong>Consistency</strong>
+                                <p class="muted-copy mb-0">Protect repetition first. Intensity can grow later.</p>
+                            </div>
+                        </div>
+
+                        {% include 'tracker/partials/field_block.html' with field=form.title %}
+                        {% include 'tracker/partials/field_block.html' with field=form.description %}
+                        {% include 'tracker/partials/field_block.html' with field=form.identity_statement %}
+                        {% include 'tracker/partials/field_block.html' with field=form.tiny_step %}
+                        {% include 'tracker/partials/field_block.html' with field=form.habit_stack_cue %}
+                        {% include 'tracker/partials/field_block.html' with field=form.consistency_plan %}
+                    </div>
+                </div>
+
+                <div class="col-xl-5">
+                    <div class="form-panel p-4 p-lg-5 builder-section-card h-100">
+                        <span class="section-kicker">Tracking setup</span>
+                        <h2 class="section-title">Turn the idea into a repeatable system</h2>
+                        <p class="section-subtitle">Keep the target clear, pick a cadence you can sustain, and choose a color that makes the habit easy to spot on the dashboard.</p>
+
+                        {% include 'tracker/partials/field_block.html' with field=form.unit %}
+                        {% include 'tracker/partials/field_block.html' with field=form.target_value %}
+                        {% include 'tracker/partials/field_block.html' with field=form.repeat %}
+                        {% include 'tracker/partials/field_block.html' with field=form.every_n_days %}
+                        {% include 'tracker/partials/field_block.html' with field=form.time_of_day %}
+                        {% include 'tracker/partials/field_block.html' with field=form.start_date %}
+                        {% include 'tracker/partials/field_block.html' with field=form.end_condition %}
+                        {% include 'tracker/partials/field_block.html' with field=form.reminders %}
+                        {% include 'tracker/partials/field_block.html' with field=form.area %}
+                        {% include 'tracker/partials/field_block.html' with field=form.color %}
+                        {% include 'tracker/partials/field_block.html' with field=form.is_active wrapper_class='mt-4' %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-row mt-4">
+                <button class="btn btn-gradient px-4" type="submit">Save Habit</button>
+                <a class="btn btn-outline-app px-4" href="{% url 'home' %}">Back to dashboard</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

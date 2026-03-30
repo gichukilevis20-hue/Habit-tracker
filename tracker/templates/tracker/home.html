@@ -1,0 +1,981 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Dashboard | Habit Tracker{% endblock %}
+{% block body_class %}page-home{% endblock %}
+
+{% block content %}
+{{ habit_chart_data|json_script:"habit-chart-data" }}
+{{ week_overview_chart|json_script:"week-overview-chart" }}
+{{ overview_score_chart|json_script:"overview-score-chart" }}
+{{ completion_history_chart|json_script:"completion-history-chart" }}
+
+<section class="section-block">
+    <div class="hero-card hero-card-home">
+        <span class="hero-orb hero-orb-primary"></span>
+        <span class="hero-orb hero-orb-secondary"></span>
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <span class="hero-kicker">Welcome to Your Habit Journey</span>
+                <h1 class="hero-title mt-3">Build momentum with daily habits, weekly reflections, and a dashboard that keeps your progress in view.</h1>
+                <p class="hero-subtitle fs-5 mt-3 mb-4">Track exercise, money goals, study sessions, or any routine that matters to you, then pair your progress with motivating quotes, weekly review notes, and a colorful calendar of what you actually did.</p>
+                <div class="hero-stat-strip">
+                    <div class="hero-mini-stat">
+                        <span>Today</span>
+                        <strong>{{ dashboard_stats.completed_today }}</strong>
+                        <small>habits completed</small>
+                    </div>
+                    <div class="hero-mini-stat">
+                        <span>Weekly notes</span>
+                        <strong>{{ dashboard_stats.weekly_reviews }}</strong>
+                        <small>reflections saved</small>
+                    </div>
+                    <div class="hero-mini-stat">
+                        <span>Small wins</span>
+                        <strong>{{ dashboard_stats.small_wins_this_week }}</strong>
+                        <small>show-up moments this week</small>
+                    </div>
+                    <div class="hero-mini-stat">
+                        <span>Best streak</span>
+                        <strong>{{ dashboard_stats.best_streak }}</strong>
+                        <small>days of consistency</small>
+                    </div>
+                </div>
+                <div class="hero-time-grid">
+                    {% for slot in app_shell.time_of_day %}
+                        <span class="hero-time-pill {% if slot.is_current %}is-current{% endif %}">
+                            <i class="fa-solid {{ slot.icon }}"></i>
+                            {{ slot.label }} · {{ slot.count }}
+                        </span>
+                    {% endfor %}
+                </div>
+                <div class="action-row action-row-hero mt-4">
+                    <a class="btn btn-light btn-lg rounded-pill px-4" href="{% url 'create_habit' %}"><i class="fa-solid fa-plus me-2"></i>Add Habit</a>
+                    <a class="btn btn-outline-light btn-lg rounded-pill px-4" href="{% url 'profile' %}"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Style Home</a>
+                    <a class="btn btn-outline-light btn-lg rounded-pill px-4" href="{% url 'contact_us' %}"><i class="fa-solid fa-envelope me-2"></i>Contact Us</a>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="home-style-panel mb-3">
+                    <span class="section-kicker">Personal dashboard</span>
+                    <h2 class="section-title mt-2">Your current look</h2>
+                    <p class="muted-copy mb-3">Change colors, font, theme, profile photo, or focus areas from your profile and the whole experience updates with you.</p>
+                    <div class="palette-strip">
+                        <span class="palette-swatch" style="background: {{ user.profile.primary_color }};"></span>
+                        <span class="palette-swatch" style="background: {{ user.profile.secondary_color }};"></span>
+                        <span class="palette-label">{{ user.profile.get_font_display }}</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <span class="tiny-pill">{{ user.profile.get_theme_display }}</span>
+                        <span class="tiny-pill">{{ app_shell.active_count }} active habits</span>
+                        <span class="tiny-pill">{{ app_shell.areas|length }} focus areas</span>
+                    </div>
+                    {% if app_shell.areas %}
+                        <div class="home-tag-cloud">
+                            {% for area in app_shell.areas|slice:":4" %}
+                                <span class="eyebrow-badge">{{ area.label }} · {{ area.count }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div id="motivationCarousel" class="carousel slide home-quote-carousel" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% for quote in quotes %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <div class="quote-card">
+                                    <span><i class="fa-solid fa-sparkles"></i> Motivation carousel</span>
+                                    <strong class="fs-5 d-block mt-3">{{ quote }}</strong>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        <button class="btn btn-sm btn-outline-light rounded-pill" type="button" data-bs-target="#motivationCarousel" data-bs-slide="prev">Prev</button>
+                        <button class="btn btn-sm btn-outline-light rounded-pill" type="button" data-bs-target="#motivationCarousel" data-bs-slide="next">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if user.is_staff %}
+<!-- ADMIN MANAGEMENT PANEL -->
+<section class="section-block">
+    <div class="admin-panel">
+        <div class="admin-header">
+            <div class="admin-title">
+                <i class="fa-solid fa-screwdriver-wrench"></i>
+                <div>
+                    <span class="d-block" style="font-size: 0.85rem; font-weight: 500; opacity: 0.8;">Management Console</span>
+                    <span>Admin Dashboard</span>
+                </div>
+            </div>
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-app btn-sm">View Full Admin Panel</a>
+        </div>
+
+        <div class="admin-grid">
+            <a href="{% url 'admin_dashboard' %}" class="admin-card">
+                <div class="admin-card-icon"><i class="fa-solid fa-users"></i></div>
+                <div class="admin-card-title">User Management</div>
+                <div class="admin-card-desc">Search, filter, and manage user accounts &amp; profiles</div>
+            </a>
+
+            <a href="{% url 'admin_habits' %}" class="admin-card">
+                <div class="admin-card-icon"><i class="fa-solid fa-check-double"></i></div>
+                <div class="admin-card-title">Habit Entries</div>
+                <div class="admin-card-desc">Review and manage all habit tracking records in the workspace</div>
+            </a>
+
+            <a href="{% url 'admin_donations' %}" class="admin-card">
+                <div class="admin-card-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                <div class="admin-card-title">Donations</div>
+                <div class="admin-card-desc">Track payments and donation records without backend admin</div>
+            </a>
+
+            <a href="{% url 'admin_dashboard' %}#admin-email-composer" class="admin-card">
+                <div class="admin-card-icon"><i class="fa-solid fa-envelope"></i></div>
+                <div class="admin-card-title">Communications</div>
+                <div class="admin-card-desc">Send staff emails and review inbox activity from the dashboard</div>
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="section-block">
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-3">
+            <div class="stat-card">
+                <span class="section-kicker">Habits</span>
+                <div class="stat-value">{{ dashboard_stats.habit_count }}</div>
+                <p class="muted-copy mb-0">Active and paused routines on your board.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="stat-card">
+                <span class="section-kicker">Today</span>
+                <div class="stat-value">{{ dashboard_stats.completed_today }}</div>
+                <p class="muted-copy mb-0">Habits already completed today.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="stat-card">
+                <span class="section-kicker">Reviews</span>
+                <div class="stat-value">{{ dashboard_stats.weekly_reviews }}</div>
+                <p class="muted-copy mb-0">Weekly reflections written for this week.</p>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="stat-card">
+                <span class="section-kicker">Completion</span>
+                <div class="stat-value">{{ dashboard_stats.today_completion_rate }}%</div>
+                <p class="muted-copy mb-0">Share of today’s habits already checked off.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block">
+    {% if habits %}
+        <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-3">
+            <div>
+                <span class="section-kicker">Pattern atlas</span>
+                <h2 class="section-title">Momentum patterns that keep the journey clear</h2>
+                <p class="section-subtitle mb-0">See how your completed days cluster across {{ pattern_atlas.range_label }}, where streaks peak, and how consistency is trending right now.</p>
+            </div>
+            <span class="tiny-pill">{{ pattern_atlas.range_label }}</span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-xxl-8">
+                <div class="panel-card pattern-panel h-100">
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                        <div>
+                            <span class="section-kicker">Calendar view</span>
+                            <h3 class="section-title mb-0">Seasonal completion calendar</h3>
+                        </div>
+                        <p class="muted-copy mb-0 pattern-panel-copy">Completed days glow with a warm-to-cool gradient so the strongest habit clusters stand out immediately.</p>
+                    </div>
+                    <div class="seasonal-month-grid">
+                        {% for month in pattern_atlas.month_panels %}
+                            <article class="seasonal-month-card">
+                                <div class="seasonal-month-head">
+                                    <div>
+                                        <strong>{{ month.label }}</strong>
+                                        <p class="muted-copy mb-0 small">{{ month.completed_total }} completed check-ins{% if month.target_total %} · {{ month.completion_rate }}% of scheduled{% endif %}</p>
+                                    </div>
+                                    <span class="tiny-pill">{% if month.target_total %}{{ month.completed_total }}/{{ month.target_total }}{% else %}Waiting for logs{% endif %}</span>
+                                </div>
+                                <div class="pattern-calendar-weekdays">
+                                    {% for weekday in weekday_headers %}
+                                        <span>{{ weekday|slice:":1" }}</span>
+                                    {% endfor %}
+                                </div>
+                                <div class="pattern-calendar-grid">
+                                    {% for week in month.weeks %}
+                                        {% for day in week %}
+                                            <div class="pattern-day-cell {% if not day.is_current_month %}is-muted{% endif %} {% if day.is_today %}is-today{% endif %} {% if day.completed_entries %}has-completion{% endif %}" {% if day.style %}style="{{ day.style }}"{% endif %}>
+                                                <strong>{{ day.day_number }}</strong>
+                                                <span>{{ day.completed_entries }}</span>
+                                                {% if day.has_reviews %}
+                                                    <i class="fa-solid fa-feather-pointed"></i>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xxl-4">
+                <div class="d-flex flex-column gap-4 h-100">
+                    <div class="panel-card insight-panel">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <span class="section-kicker">Score</span>
+                                <h3 class="section-title mb-0">Daily progress percentages</h3>
+                            </div>
+                            <span class="tiny-pill">Avg {{ pattern_atlas.score_chart.average }}%</span>
+                        </div>
+                        <p class="muted-copy mb-3">A clean line view of how often scheduled habits are actually getting completed day by day.</p>
+                        <div class="chart-surface compact-chart">
+                            <canvas id="overviewScoreChart" height="220"></canvas>
+                        </div>
+                    </div>
+                    <div class="panel-card insight-panel">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <span class="section-kicker">History</span>
+                                <h3 class="section-title mb-0">Completed habit counts</h3>
+                            </div>
+                            {% if pattern_atlas.history_chart.peak_value %}
+                                <span class="tiny-pill">Peak {{ pattern_atlas.history_chart.peak_value }} on {{ pattern_atlas.history_chart.peak_day }}</span>
+                            {% endif %}
+                        </div>
+                        <p class="muted-copy mb-3">Use the bar chart to spot which recent days carried the most habit check-ins.</p>
+                        <div class="chart-surface compact-chart">
+                            <canvas id="completionHistoryChart" height="220"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-12 col-lg-4">
+                <div class="panel-card pattern-panel h-100">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <span class="section-kicker">Best streaks</span>
+                            <h3 class="section-title mb-0">Top completion runs</h3>
+                        </div>
+                    </div>
+                    {% if pattern_atlas.best_streaks %}
+                        <div class="pattern-streak-list">
+                            {% for streak in pattern_atlas.best_streaks %}
+                                <div class="pattern-streak-item">
+                                    <div class="d-flex justify-content-between gap-3">
+                                        <strong>{{ streak.label }}</strong>
+                                        <span class="muted-copy">{{ streak.days }} day{{ streak.days|pluralize }}</span>
+                                    </div>
+                                    <div class="pattern-streak-bar">
+                                        <span style="width: {{ streak.width }}%;"></span>
+                                    </div>
+                                    <p class="muted-copy small mb-0">{{ streak.completed_total }} completed habit check-ins inside this run.</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="muted-copy mb-0">Your first completed run will appear here as soon as a streak begins.</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="panel-card pattern-panel h-100">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <span class="section-kicker">Frequency</span>
+                            <h3 class="section-title mb-0">By day of the week</h3>
+                        </div>
+                    </div>
+                    <p class="muted-copy mb-3">The busiest days expand into larger circles so your natural rhythm is easy to notice.</p>
+                    <div class="weekday-bubble-row">
+                        {% for day in pattern_atlas.weekday_frequency %}
+                            <div class="weekday-bubble-card {% if day.is_peak %}is-peak{% endif %}">
+                                <div class="weekday-bubble" style="width: {{ day.size }}rem; height: {{ day.size }}rem;">
+                                    <strong>{{ day.label }}</strong>
+                                    <span>{{ day.count }}</span>
+                                </div>
+                                <div class="weekday-bubble-bar">
+                                    <span style="width: {{ day.width }}%;"></span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="panel-card pattern-panel h-100">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <span class="section-kicker">Targets</span>
+                            <h3 class="section-title mb-0">Today to yearly progress</h3>
+                        </div>
+                    </div>
+                    <div class="pattern-progress-list">
+                        {% for item in pattern_atlas.progress_bars %}
+                            <div class="pattern-progress-item">
+                                <div class="d-flex justify-content-between align-items-center gap-3">
+                                    <strong>{{ item.label }}</strong>
+                                    <span class="muted-copy">{{ item.progress_label }}</span>
+                                </div>
+                                <div class="progress-shell mt-2">
+                                    <div class="progress-bar-app" style="width: {{ item.percent|floatformat:0 }}%;"></div>
+                                </div>
+                                <p class="muted-copy small mb-0 mt-2">{{ item.percent }}% complete{% if not item.target %} · no scheduled check-ins yet{% endif %}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="info-panel text-center py-5">
+            <span class="section-kicker">Pattern atlas</span>
+            <h2 class="section-title">Your visual tracker wakes up with the first habit</h2>
+            <p class="section-subtitle">Create a habit and start logging days to unlock the seasonal calendar, streak boards, frequency bubbles, score chart, and history bars.</p>
+            <a class="btn btn-gradient px-4 mobile-wide-btn" href="{% url 'create_habit' %}">Create your first habit</a>
+        </div>
+    {% endif %}
+</section>
+
+<section class="section-block">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-3">
+        <div>
+            <span class="section-kicker">Daily habits</span>
+            <h2 class="section-title">Your routine dashboard</h2>
+            <p class="section-subtitle mb-0">Each habit includes progress bars, a weekly reflection notepad prompt, and a 14-day view of streaks, small wins, and progress over time.</p>
+        </div>
+        <a class="btn btn-gradient px-4 mobile-wide-btn" href="{% url 'create_habit' %}">Create another habit</a>
+    </div>
+
+    <div class="row g-4">
+        {% for habit in habits %}
+            <div class="col-12">
+                <article class="habit-card" style="--habit-color: {{ habit.color }};">
+                    <div class="habit-header">
+                        <div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                                <h3 class="mb-0">{{ habit.title }}</h3>
+                                {% if habit.is_active %}
+                                    <span class="tiny-pill">Active</span>
+                                {% else %}
+                                    <span class="tiny-pill">Paused</span>
+                                {% endif %}
+                                {% if habit.area %}
+                                    <span class="tiny-pill">{{ habit.area }}</span>
+                                {% endif %}
+                                <span class="tiny-pill">{{ habit.get_repeat_display }}</span>
+                                <span class="tiny-pill">{{ habit.target_label }} / day</span>
+                                <span class="tiny-pill">{{ habit.atomic_show_up_streak }} day show-up streak</span>
+                            </div>
+                            <p class="muted-copy mb-2">{{ habit.description|default:"This habit is ready for your next entry." }}</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="eyebrow-badge">{{ habit.completed_days }}/7 days completed</span>
+                                <span class="eyebrow-badge">{{ habit.weekly_total }} {{ habit.unit }} logged</span>
+                                <span class="eyebrow-badge">Average {{ habit.weekly_average }} {{ habit.unit }}</span>
+                            </div>
+                        </div>
+                        <div class="text-lg-end">
+                            <div class="stat-value fs-2">{{ habit.progress_percent }}%</div>
+                            <p class="muted-copy mb-0">toward weekly quantity target</p>
+                        </div>
+                    </div>
+
+                    <div class="progress-shell mt-4">
+                        <div class="progress-bar-app" style="width: {{ habit.progress_percent|floatformat:0 }}%;"></div>
+                    </div>
+
+                    <div class="atomic-blueprint-grid">
+                        <div class="atomic-blueprint-card">
+                            <span class="section-kicker">Identity</span>
+                            <p class="mb-0">{{ habit.identity_focus }}</p>
+                        </div>
+                        <div class="atomic-blueprint-card">
+                            <span class="section-kicker">Tiny step</span>
+                            <p class="mb-0">{{ habit.tiny_step_focus }}</p>
+                        </div>
+                        <div class="atomic-blueprint-card">
+                            <span class="section-kicker">Habit stack</span>
+                            <p class="mb-0">{{ habit.stack_focus }}</p>
+                        </div>
+                        <div class="atomic-blueprint-card">
+                            <span class="section-kicker">Consistency</span>
+                            <p class="mb-0">{{ habit.consistency_focus }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mt-1">
+                        <div class="col-lg-6">
+                            <div class="note-surface h-100">
+                                <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                    <div>
+                                        <span class="section-kicker">Today</span>
+                                        <h4 class="mb-1">Daily progress</h4>
+                                    </div>
+                                    {% if habit.today_entry and habit.today_entry.completed %}
+                                        <span class="badge-status success">Completed</span>
+                                    {% elif habit.today_entry %}
+                                        <span class="badge-status pending">In progress</span>
+                                    {% else %}
+                                        <span class="badge-status">Not logged</span>
+                                    {% endif %}
+                                </div>
+                                {% if habit.today_entry %}
+                                    <p class="mb-2"><strong>{{ habit.today_entry.quantity }}</strong> {{ habit.unit }} logged today.</p>
+                                    <p class="muted-copy mb-0">{{ habit.today_entry.note|default:"No note added yet for today." }}</p>
+                                {% else %}
+                                    <p class="muted-copy mb-0">You have not logged this habit today yet. Add an entry to keep your momentum visible.</p>
+                                {% endif %}
+                                {% if habit.completion_quote %}
+                                    <div class="metric-pill mt-3">{{ habit.completion_quote }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="note-surface h-100">
+                                <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                    <div>
+                                        <span class="section-kicker">Weekly review</span>
+                                        <h4 class="mb-1">Reflection notepad</h4>
+                                    </div>
+                                    {% if habit.current_week_review and habit.current_week_review.photo %}
+                                        <span class="tiny-pill"><i class="fa-regular fa-image"></i> Photo added</span>
+                                    {% endif %}
+                                </div>
+                                <p class="muted-copy mb-2">Week of {{ week_start|date:"M d" }} to {{ week_end|date:"M d" }}</p>
+                                <p class="mb-0">{{ habit.review_prompt }}</p>
+                                {% if habit.latest_review and habit.latest_review != habit.current_week_review %}
+                                    <p class="muted-copy mt-3 mb-0">Last saved insight: {{ habit.latest_review.lessons|default:habit.latest_review.what_went_well|default:"A reflection is ready whenever you are." }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mt-1">
+                        <div class="col-xl-8">
+                            <div class="habit-chart-wrap atomic-chart-panel h-100">
+                                <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+                                    <div>
+                                        <span class="section-kicker">Atomic pattern</span>
+                                        <h4 class="mb-1">Progress, streaks, and small wins</h4>
+                                    </div>
+                                    <span class="tiny-pill">{{ habit.atomic_window_label }}</span>
+                                </div>
+                                <canvas id="habit-chart-{{ habit.id }}"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-xl-4">
+                            <div class="note-surface h-100">
+                                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                    <div>
+                                        <span class="section-kicker">Consistency</span>
+                                        <h4 class="mb-1">Small wins board</h4>
+                                    </div>
+                                </div>
+                                <div class="atomic-stat-grid">
+                                    <div class="atomic-stat-card">
+                                        <span>Show-up streak</span>
+                                        <strong>{{ habit.atomic_show_up_streak }}</strong>
+                                        <small>current days</small>
+                                    </div>
+                                    <div class="atomic-stat-card">
+                                        <span>Best streak</span>
+                                        <strong>{{ habit.atomic_best_streak }}</strong>
+                                        <small>days all time</small>
+                                    </div>
+                                    <div class="atomic-stat-card">
+                                        <span>Small wins</span>
+                                        <strong>{{ habit.atomic_small_wins }}</strong>
+                                        <small>{{ habit.atomic_window_label|lower }}</small>
+                                    </div>
+                                    <div class="atomic-stat-card">
+                                        <span>Consistency</span>
+                                        <strong>{{ habit.atomic_consistency_rate }}%</strong>
+                                        <small>show-up rate</small>
+                                    </div>
+                                </div>
+                                <div class="streak-track">
+                                    {% for day in habit.atomic_days %}
+                                        <span class="streak-day {% if day.won %}is-win{% endif %} {% if day.completed %}is-complete{% endif %}" title="{{ day.title }}">{{ day.label }}</span>
+                                    {% endfor %}
+                                </div>
+                                <p class="muted-copy mt-3 mb-0">A small win means you showed up. Full completion still matters, but consistency starts with making the habit easy to begin.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="habit-actions mt-3">
+                        <a class="btn btn-gradient px-4" href="{% url 'habit_entry' habit.id %}">Log Today</a>
+                        <a class="btn btn-soft px-4" href="{% url 'weekly_review' habit.id %}">Open Weekly Review</a>
+                        <a class="btn btn-outline-app px-4" href="{% url 'edit_habit' habit.id %}">Edit Habit</a>
+                        <a class="btn btn-outline-danger rounded-pill px-4" href="{% url 'delete_habit' habit.id %}">Delete</a>
+                    </div>
+                </article>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="info-panel text-center py-5">
+                    <span class="section-kicker">Fresh start</span>
+                    <h2 class="section-title">No habits yet</h2>
+                    <p class="section-subtitle">Create your first habit to unlock the Atomic builder, streak charts, small-win tracking, review prompts, and calendar views.</p>
+                    <a class="btn btn-gradient px-4 mobile-wide-btn" href="{% url 'create_habit' %}">Build your first habit</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="row g-4">
+        <div class="col-xl-5">
+            <div class="panel-card p-4 h-100">
+                <span class="section-kicker">Weekly summary</span>
+                <h2 class="section-title">This week at a glance</h2>
+                <p class="section-subtitle">See how many habits were completed each day and where your week felt strongest.</p>
+                <div class="chart-surface mt-4">
+                    <canvas id="weekOverviewChart" height="240"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-7">
+            <div class="panel-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+                    <div>
+                        <span class="section-kicker">Calendar</span>
+                        <h2 class="section-title mb-0">{{ month_start|date:"F Y" }}</h2>
+                    </div>
+                    <p class="section-subtitle mb-0">Tap any day to inspect entries and related review notes.</p>
+                </div>
+
+                <div class="calendar-wrapper mb-3">
+                    <div class="calendar-grid-header">
+                        {% for day_name in weekday_headers %}
+                            <div class="calendar-label">{{ day_name }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="calendar-grid-body">
+                        {% for week in calendar_weeks %}
+                            <div class="calendar-week-row">
+                                {% for day in week %}
+                                    <div class="calendar-day-cell {% if not day.is_current_month %}is-muted{% endif %} {% if day.is_today %}is-today{% endif %}">
+                                        <a class="calendar-day-link" href="{% url 'calendar_day' day.date %}"></a>
+                                        <div class="d-flex justify-content-between align-items-start mb-3 calendar-day-meta">
+                                            <div class="calendar-day-heading">
+                                                <span class="calendar-day-stamp">{{ day.date|date:"D, M j" }}</span>
+                                                <strong class="calendar-day-number">{{ day.date.day }}</strong>
+                                            </div>
+                                            {% if day.has_reviews %}
+                                                <span class="calendar-review-dot" title="Review note available"></span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="calendar-count">{{ day.completed }} / {{ day.total }}</div>
+                                        <p class="muted-copy small mt-2 mb-0">
+                                            {% if day.total %}
+                                                {{ day.completed }} habits completed
+                                            {% else %}
+                                                No logs yet
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="panel-card fullcalendar-shell">
+        <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-3">
+            <div>
+                <span class="section-kicker">Planner view</span>
+                <h2 class="section-title">Monthly habit calendar</h2>
+            </div>
+            <p class="section-subtitle mb-0">Browse entries in a fuller calendar layout with direct day-level drilldown.</p>
+        </div>
+        <div id="fullCalendar"></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const habitChartData = JSON.parse(document.getElementById('habit-chart-data').textContent);
+const weekOverviewData = JSON.parse(document.getElementById('week-overview-chart').textContent);
+const overviewScoreData = JSON.parse(document.getElementById('overview-score-chart').textContent);
+const completionHistoryData = JSON.parse(document.getElementById('completion-history-chart').textContent);
+const rootStyles = getComputedStyle(document.documentElement);
+const primaryColor = rootStyles.getPropertyValue('--primary').trim() || '#ff7a59';
+const secondaryColor = rootStyles.getPropertyValue('--secondary').trim() || '#3256ff';
+const textSoftColor = rootStyles.getPropertyValue('--text-soft').trim() || '#5b6480';
+
+function hexToRgba(hexValue, alpha) {
+    const hex = (hexValue || '').replace('#', '').trim();
+    if (![3, 6].includes(hex.length)) {
+        return `rgba(50, 86, 255, ${alpha})`;
+    }
+
+    const normalized = hex.length === 3
+        ? hex.split('').map((character) => character + character).join('')
+        : hex;
+
+    const red = parseInt(normalized.slice(0, 2), 16);
+    const green = parseInt(normalized.slice(2, 4), 16);
+    const blue = parseInt(normalized.slice(4, 6), 16);
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+const overviewScoreCanvas = document.getElementById('overviewScoreChart');
+if (overviewScoreCanvas) {
+    new Chart(overviewScoreCanvas, {
+        type: 'line',
+        data: {
+            labels: overviewScoreData.labels,
+            datasets: [{
+                label: 'Completion score',
+                data: overviewScoreData.values,
+                borderColor: secondaryColor,
+                backgroundColor: hexToRgba(secondaryColor, 0.14),
+                fill: true,
+                tension: 0.35,
+                spanGaps: true,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: 100,
+                    ticks: {
+                        callback(value) {
+                            return `${value}%`;
+                        },
+                        color: textSoftColor
+                    },
+                    grid: {
+                        color: hexToRgba(secondaryColor, 0.08)
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: textSoftColor,
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 7
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+const completionHistoryCanvas = document.getElementById('completionHistoryChart');
+if (completionHistoryCanvas) {
+    new Chart(completionHistoryCanvas, {
+        type: 'bar',
+        data: {
+            labels: completionHistoryData.labels,
+            datasets: [{
+                label: 'Completed habits',
+                data: completionHistoryData.values,
+                backgroundColor: hexToRgba(primaryColor, 0.82),
+                borderRadius: 14,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        color: textSoftColor
+                    },
+                    grid: {
+                        color: hexToRgba(secondaryColor, 0.08)
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: textSoftColor,
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 7
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+habitChartData.forEach((habit) => {
+    const canvas = document.getElementById(`habit-chart-${habit.id}`);
+    if (!canvas) {
+        return;
+    }
+
+    new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: habit.labels,
+            datasets: [
+                {
+                    label: `Logged ${habit.unit}`,
+                    data: habit.values,
+                    borderColor: habit.color,
+                    backgroundColor: hexToRgba(habit.color, 0.14),
+                    tension: 0.35,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 5,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Small win',
+                    type: 'bar',
+                    data: habit.smallWins,
+                    backgroundColor: hexToRgba(primaryColor, 0.24),
+                    borderColor: hexToRgba(primaryColor, 0.45),
+                    borderWidth: 1,
+                    borderRadius: 999,
+                    yAxisID: 'y1'
+                },
+                {
+                    label: 'Streak',
+                    data: habit.streaks,
+                    borderColor: secondaryColor,
+                    backgroundColor: hexToRgba(secondaryColor, 0.08),
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointHoverRadius: 4,
+                    fill: false,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: hexToRgba(secondaryColor, 0.08)
+                    },
+                    ticks: {
+                        color: textSoftColor
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        precision: 0,
+                        color: textSoftColor
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: textSoftColor
+                    }
+                }
+            }
+        }
+    });
+});
+
+const overviewCanvas = document.getElementById('weekOverviewChart');
+if (overviewCanvas) {
+    new Chart(overviewCanvas, {
+        type: 'bar',
+        data: {
+            labels: weekOverviewData.labels,
+            datasets: [
+                {
+                    label: 'Completed habits',
+                    data: weekOverviewData.completed,
+                    backgroundColor: hexToRgba(secondaryColor, 0.82),
+                    borderRadius: 14
+                },
+                {
+                    label: 'Planned habits',
+                    data: weekOverviewData.planned,
+                    backgroundColor: hexToRgba(primaryColor, 0.18),
+                    borderRadius: 14
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: hexToRgba(secondaryColor, 0.08)
+                    },
+                    ticks: {
+                        precision: 0,
+                        color: textSoftColor
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: textSoftColor
+                    }
+                }
+            }
+        }
+    });
+}
+
+const calendarEl = document.getElementById('fullCalendar');
+const compactCalendarQuery = window.matchMedia('(max-width: 767px)');
+let dashboardCalendar = null;
+let lastCompactCalendarState = compactCalendarQuery.matches;
+
+function getCalendarToolbar(isCompact) {
+    return isCompact
+        ? {
+            left: 'prev,next',
+            center: 'title',
+            right: 'listWeek,dayGridMonth'
+        }
+        : {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+        };
+}
+
+function syncDashboardCalendar(forceViewSwitch = false) {
+    if (!dashboardCalendar) {
+        return;
+    }
+
+    const isCompact = compactCalendarQuery.matches;
+    dashboardCalendar.setOption('height', isCompact ? 'auto' : 720);
+    dashboardCalendar.setOption('headerToolbar', getCalendarToolbar(isCompact));
+    dashboardCalendar.setOption('dayMaxEventRows', isCompact ? 2 : 3);
+    dashboardCalendar.setOption('expandRows', !isCompact);
+
+    if (forceViewSwitch) {
+        const currentView = dashboardCalendar.view.type;
+        if (isCompact && currentView === 'timeGridWeek') {
+            dashboardCalendar.changeView('listWeek');
+        }
+        if (!isCompact && currentView === 'listWeek' && lastCompactCalendarState) {
+            dashboardCalendar.changeView('dayGridMonth');
+        }
+    }
+
+    lastCompactCalendarState = isCompact;
+    dashboardCalendar.updateSize();
+}
+
+if (calendarEl) {
+    dashboardCalendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: compactCalendarQuery.matches ? 'listWeek' : 'dayGridMonth',
+        height: compactCalendarQuery.matches ? 'auto' : 720,
+        headerToolbar: getCalendarToolbar(compactCalendarQuery.matches),
+        dayMaxEventRows: compactCalendarQuery.matches ? 2 : 3,
+        expandRows: !compactCalendarQuery.matches,
+        buttonText: {
+            today: 'Today',
+            month: 'Month',
+            week: 'Week',
+            list: 'List'
+        },
+        events: '{% url "calendar_events" %}',
+        eventClick(info) {
+            info.jsEvent.preventDefault();
+            if (info.event.url) {
+                window.location.href = info.event.url;
+            }
+        }
+    });
+    dashboardCalendar.render();
+}
+
+let resizeTicking = false;
+function refreshCalendarLayout(forceViewSwitch = false) {
+    const gridBody = document.querySelector('.calendar-grid-body');
+    if (gridBody) {
+        gridBody.style.gridTemplateColumns = getComputedStyle(gridBody).gridTemplateColumns;
+    }
+    syncDashboardCalendar(forceViewSwitch);
+    resizeTicking = false;
+}
+
+const onCalendarBreakpointChange = () => refreshCalendarLayout(true);
+if (typeof compactCalendarQuery.addEventListener === 'function') {
+    compactCalendarQuery.addEventListener('change', onCalendarBreakpointChange);
+} else if (typeof compactCalendarQuery.addListener === 'function') {
+    compactCalendarQuery.addListener(onCalendarBreakpointChange);
+}
+
+window.addEventListener('resize', function() {
+    if (!resizeTicking) {
+        requestAnimationFrame(() => refreshCalendarLayout(false));
+        resizeTicking = true;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Donate | Habit Tracker{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-xl-7">
+        <div class="form-panel p-4 p-lg-5">
+            <span class="section-kicker">Support the project</span>
+            <h1 class="section-title">Donate with M-Pesa or Bitcoin</h1>
+            <p class="section-subtitle">Choose a payment method, send support through Daraja-backed M-Pesa, Bitcoin, or a Lightning invoice, and keep a record of the contribution in your account.</p>
+
+            <div class="metric-pill mb-4">
+                {% if mpesa_ready %}
+                    <i class="fa-solid fa-circle-check"></i> Daraja credentials are configured.
+                {% else %}
+                    <i class="fa-solid fa-circle-info"></i> Daraja is not ready yet, so the app will show the exact STK error instead of pretending the push was sent.
+                {% endif %}
+            </div>
+            {% if mpesa_config_issues %}
+                <div class="timeline-card mb-4">
+                    <strong>Fix these Daraja settings first</strong>
+                    <ul class="mt-3 mb-0 ps-3">
+                        {% for issue in mpesa_config_issues %}
+                            <li class="mb-2">{{ issue }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% if mpesa_callback_url %}
+                        <p class="mt-3 mb-0">Current callback URL: <code>{{ mpesa_callback_url }}</code></p>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% include 'tracker/partials/form_fields.html' with form=form %}
+                <button class="btn btn-gradient px-4 mobile-wide-btn" type="submit">Continue Donation</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-xl-5">
+        <div class="info-panel mb-4">
+            <span class="section-kicker">Payment details</span>
+            <h2 class="section-title">Wallets and next steps</h2>
+            <p class="muted-copy">Use the wallet list below for on-chain Bitcoin donations, or paste a Lightning invoice if you prefer an invoice-first flow.</p>
+            {% if addresses %}
+                <div class="timeline-card">
+                    <strong>Available Bitcoin addresses</strong>
+                    <ul class="mt-3 mb-0 ps-3">
+                        {% for address in addresses %}
+                            <li class="mb-2"><code>{{ address }}</code></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            <div class="timeline-card">
+                <strong>Default wallet</strong>
+                <p class="mt-2 mb-0"><code>{{ default_btc }}</code></p>
+            </div>
+            {% if donation_result %}
+                <div class="timeline-card">
+                    <strong>Latest status</strong>
+                    <p class="mt-2 mb-0">{{ donation_result }}</p>
+                    {% if latest_mpesa_phone %}
+                        <p class="mt-3 mb-0">Requested phone: <code>{{ latest_mpesa_phone }}</code></p>
+                    {% endif %}
+                    {% if latest_mpesa_reference %}
+                        <p class="mt-2 mb-0">Checkout request: <code>{{ latest_mpesa_reference }}</code></p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="info-panel">
+            <span class="section-kicker">QR</span>
+            <h2 class="section-title">{{ qr_title|default:"Pay from your phone" }}</h2>
+            {% if qr_uri %}
+                <img src="{{ qr_uri }}" class="img-fluid rounded-4 border" alt="Donation QR code" />
+                <p class="muted-copy mt-3 mb-0">{{ qr_caption|default:"Scan this QR code with your wallet app or payment tool to complete the donation flow." }}</p>
+            {% else %}
+                <p class="muted-copy mb-0">A QR code appears here after you submit a Bitcoin or Lightning donation request.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

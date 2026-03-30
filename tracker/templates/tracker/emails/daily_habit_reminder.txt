@@ -1,0 +1,20 @@
+Hi {{ display_name }},
+
+Here is your {{ app_name }} reset for {{ day|date:"l, F j, Y" }}.
+
+{% if missed_habits|length == 1 %}
+You missed one scheduled habit today:
+{% else %}
+You missed {{ missed_habits|length }} scheduled habits today:
+{% endif %}
+{% for habit in missed_habits %}
+- {{ habit.title }}
+  Goal: {{ habit.goal_summary }}
+  Why it matters: {{ habit.reason }}
+{% endfor %}
+
+{{ motivation_line }}
+
+Open {{ app_name }} tomorrow, log the next check-in, and keep building the version of yourself you started this for.
+
+{{ app_name }}

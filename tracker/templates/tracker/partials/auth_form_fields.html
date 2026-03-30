@@ -1,0 +1,46 @@
+{% for field in form %}
+    {% with input_type=field.field.widget.input_type %}
+        {% if input_type == 'checkbox' %}
+            <div class="form-check form-switch auth-check mb-3">
+                {{ field }}
+                <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div class="auth-field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="auth-field">
+                <label class="auth-field-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <div class="auth-field-frame {% if field.errors %}has-error{% endif %}">
+                    <span class="auth-field-icon" aria-hidden="true">
+                        {% if field.name == 'username' %}
+                            <i class="fa-solid fa-at"></i>
+                        {% elif field.name == 'email' %}
+                            <i class="fa-solid fa-envelope-open-text"></i>
+                        {% elif 'password' in field.name %}
+                            <i class="fa-solid fa-lock"></i>
+                        {% elif field.name == 'age' %}
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        {% elif field.name == 'gender' %}
+                            <i class="fa-solid fa-user"></i>
+                        {% else %}
+                            <i class="fa-solid fa-pen-line"></i>
+                        {% endif %}
+                    </span>
+                    <div class="auth-field-input">
+                        {{ field }}
+                    </div>
+                </div>
+                {% if field.help_text %}
+                    <div class="auth-field-help">{{ field.help_text }}</div>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div class="auth-field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+{% endfor %}

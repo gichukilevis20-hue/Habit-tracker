@@ -1,0 +1,85 @@
+{% extends 'tracker/admin_workspace_base.html' %}
+
+{% block admin_workspace_content %}
+<section class="section-block">
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="form-panel h-100">
+                <div class="admin-section-head">
+                    <div>
+                        <span class="section-kicker">Inbox Message</span>
+                        <h2 class="section-title mb-0">{{ contact_message.subject|default:"General Inquiry" }}</h2>
+                    </div>
+                    <span class="badge-status {% if contact_message.delivery_status == 'sent' %}success{% elif contact_message.delivery_status == 'failed' %}failed{% else %}pending{% endif %}">
+                        {{ contact_message.get_delivery_status_display }}
+                    </span>
+                </div>
+
+                <div class="mt-4">
+                    <div class="mb-3">
+                        <span class="section-kicker">Sender</span>
+                        <p class="mb-0"><strong>{{ contact_message.sender_name }}</strong></p>
+                        <p class="muted-copy mb-0">{{ contact_message.sender_email }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <span class="section-kicker">Recipient</span>
+                        <p class="mb-0">{{ contact_message.recipient_email }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <span class="section-kicker">Message</span>
+                        <div class="muted-copy mb-0">{{ contact_message.message_body|linebreaksbr }}</div>
+                    </div>
+                    {% if contact_message.delivery_error %}
+                        <div class="mb-0">
+                            <span class="section-kicker">Delivery Error</span>
+                            <div class="text-danger small">{{ contact_message.delivery_error }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="form-panel h-100">
+                <div class="admin-section-head">
+                    <div>
+                        <span class="section-kicker">Metadata</span>
+                        <h2 class="section-title mb-0">Delivery Details</h2>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-3 mt-4">
+                    <div>
+                        <span class="section-kicker">Created</span>
+                        <p class="mb-0">{{ contact_message.created_at|date:"Y-m-d H:i" }}</p>
+                    </div>
+                    <div>
+                        <span class="section-kicker">Sent At</span>
+                        <p class="mb-0">{{ contact_message.sent_at|date:"Y-m-d H:i"|default:"Not recorded" }}</p>
+                    </div>
+                    <div>
+                        <span class="section-kicker">Sandbox Inbox</span>
+                        <p class="mb-0">{{ contact_recipient_email }}</p>
+                        <p class="muted-copy mb-0 small">{{ email_delivery_status.smtp_transport_label }} from {{ email_delivery_status.smtp_sender_email }}</p>
+                        {% if not email_delivery_status.smtp_enabled %}
+                            <p class="muted-copy mb-0 small mt-2">SMTP is not active, so this record is visible in the workspace even before Gmail delivery is enabled.</p>
+                        {% elif not email_delivery_status.smtp_sender_matches_sandbox %}
+                            <p class="muted-copy mb-0 small mt-2">The current authenticated sender does not yet match the sandbox inbox address.</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <span class="section-kicker">Linked Account</span>
+                        {% if contact_message.user %}
+                            <p class="mb-0"><a href="{% url 'admin_user_edit' contact_message.user_id %}">{{ contact_message.user.username }}</a></p>
+                        {% else %}
+                            <p class="muted-copy mb-0">Anonymous submission</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap mt-4">
+                    <a class="btn btn-gradient" href="{% url 'admin_messages' %}">Back to Inbox</a>
+                    <a class="btn btn-danger" href="{% url 'admin_message_delete' contact_message.id %}">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

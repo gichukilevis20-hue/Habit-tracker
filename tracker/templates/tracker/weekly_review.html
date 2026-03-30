@@ -1,0 +1,196 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Weekly Review | Habit Tracker{% endblock %}
+
+{% block content %}
+{{ chart_data|json_script:"review-chart-data" }}
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <div class="form-panel p-4 p-lg-5">
+            <span class="section-kicker">Weekly review</span>
+            <h1 class="section-title">{{ habit.title }}</h1>
+            <p class="section-subtitle">Reflect on the week from {{ week_start|date:"M d" }} to {{ week_end|date:"M d" }}, record what worked, and add a photo if you want the review to feel more tangible.</p>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card h-100">
+                        <span class="section-kicker">Weekly total</span>
+                        <div class="stat-value fs-2">{{ weekly_total }}</div>
+                        <p class="muted-copy mb-0">{{ habit.unit }} logged this week.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card h-100">
+                        <span class="section-kicker">Completed</span>
+                        <div class="stat-value fs-2">{{ completed_days }}/7</div>
+                        <p class="muted-copy mb-0">Days you met the habit.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card h-100">
+                        <span class="section-kicker">Small wins</span>
+                        <div class="stat-value fs-2">{{ small_wins_this_week }}</div>
+                        <p class="muted-copy mb-0">Days you showed up this week.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="atomic-blueprint-grid mb-4">
+                <div class="atomic-blueprint-card">
+                    <span class="section-kicker">Identity</span>
+                    <p class="mb-0">{{ habit.identity_focus }}</p>
+                </div>
+                <div class="atomic-blueprint-card">
+                    <span class="section-kicker">Tiny step</span>
+                    <p class="mb-0">{{ habit.tiny_step_focus }}</p>
+                </div>
+                <div class="atomic-blueprint-card">
+                    <span class="section-kicker">Habit stack</span>
+                    <p class="mb-0">{{ habit.stack_focus }}</p>
+                </div>
+                <div class="atomic-blueprint-card">
+                    <span class="section-kicker">Consistency</span>
+                    <p class="mb-0">{{ habit.consistency_focus }}</p>
+                </div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {% include 'tracker/partials/form_fields.html' with form=form %}
+                <div class="action-row">
+                    <button class="btn btn-gradient px-4" type="submit">Save Review</button>
+                    <a class="btn btn-outline-app px-4" href="{% url 'home' %}">Back to dashboard</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-xl-5">
+        <div class="info-panel mb-4">
+            <span class="section-kicker">Trend</span>
+            <h2 class="section-title">This week's rhythm</h2>
+            <div class="chart-surface mt-3">
+                <canvas id="reviewTrendChart" height="240"></canvas>
+            </div>
+        </div>
+        <div class="info-panel mb-4">
+            <span class="section-kicker">Consistency</span>
+            <h2 class="section-title">Atomic scoreboard</h2>
+            <div class="atomic-stat-grid mt-3">
+                <div class="atomic-stat-card">
+                    <span>Show-up streak</span>
+                    <strong>{{ atomic_metrics.current_streak }}</strong>
+                    <small>current days</small>
+                </div>
+                <div class="atomic-stat-card">
+                    <span>Best streak</span>
+                    <strong>{{ atomic_metrics.best_streak }}</strong>
+                    <small>days all time</small>
+                </div>
+                <div class="atomic-stat-card">
+                    <span>Small wins</span>
+                    <strong>{{ atomic_metrics.small_wins }}</strong>
+                    <small>{{ atomic_metrics.window_label|lower }}</small>
+                </div>
+                <div class="atomic-stat-card">
+                    <span>Consistency</span>
+                    <strong>{{ atomic_metrics.consistency_rate }}%</strong>
+                    <small>show-up rate</small>
+                </div>
+            </div>
+            <div class="streak-track mt-3">
+                {% for day in atomic_metrics.days %}
+                    <span class="streak-day {% if day.won %}is-win{% endif %} {% if day.completed %}is-complete{% endif %}" title="{{ day.title }}">{{ day.label }}</span>
+                {% endfor %}
+            </div>
+            <p class="muted-copy mt-3 mb-0">Use the review to notice what made repetition easy enough to repeat, not just what made the numbers bigger.</p>
+        </div>
+        <div class="info-panel">
+            <span class="section-kicker">Past notes</span>
+            <h2 class="section-title">Recent reflections</h2>
+            {% for review in previous_reviews %}
+                <div class="timeline-card">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <strong>{{ review.week_start|date:"M d" }} - {{ review.week_end|date:"M d" }}</strong>
+                        {% if review.photo %}
+                            <span class="tiny-pill">Photo saved</span>
+                        {% endif %}
+                    </div>
+                    <p class="muted-copy mt-2 mb-0">{{ review.lessons|default:review.what_went_well|default:"Reflection saved." }}</p>
+                </div>
+            {% empty %}
+                <p class="muted-copy mb-0">Your recent weekly reflections will appear here once you save them.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const reviewChartData = JSON.parse(document.getElementById('review-chart-data').textContent);
+const reviewCanvas = document.getElementById('reviewTrendChart');
+if (reviewCanvas) {
+    new Chart(reviewCanvas, {
+        type: 'line',
+        data: {
+            labels: reviewChartData.labels,
+            datasets: [
+                {
+                    label: 'Logged amount',
+                    data: reviewChartData.values,
+                    borderColor: reviewChartData.color,
+                    backgroundColor: `${reviewChartData.color}22`,
+                    tension: 0.35,
+                    fill: true,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Small win',
+                    type: 'bar',
+                    data: reviewChartData.smallWins,
+                    backgroundColor: '#ff7a5933',
+                    borderColor: '#ff7a5970',
+                    borderWidth: 1,
+                    borderRadius: 999,
+                    yAxisID: 'y1'
+                },
+                {
+                    label: 'Streak',
+                    data: reviewChartData.streaks,
+                    borderColor: '#3256ff',
+                    backgroundColor: '#3256ff18',
+                    tension: 0.3,
+                    pointRadius: 3,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}{{ admin_page_title }} | Habit Tracker{% endblock %}
+{% block body_class %}page-admin-workspace{% endblock %}
+
+{% block content %}
+<section class="section-block">
+    <div class="hero-card admin-hero-card">
+        <div class="hero-orb hero-orb-primary"></div>
+        <div class="hero-orb hero-orb-secondary"></div>
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div>
+                <span class="hero-kicker">Staff Workspace</span>
+                <h1 class="hero-title admin-hero-title">{{ admin_page_title }}</h1>
+                <p class="hero-subtitle admin-hero-subtitle mb-0">{{ admin_page_subtitle }}</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-soft" href="{% url 'home' %}"><i class="fa-solid fa-arrow-left me-2"></i>Back to App</a>
+                <a class="btn btn-outline-light" href="{% url 'admin_dashboard' %}"><i class="fa-solid fa-grid-2 me-2"></i>Workspace Home</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="panel-card admin-shell-nav">
+        <div class="admin-workspace-tabs">
+            {% for item in admin_nav_items %}
+                <a class="admin-workspace-tab {% if admin_section == item.key %}is-active{% endif %}" href="{{ item.url }}">
+                    <i class="{{ item.icon }}"></i>
+                    <span>{{ item.label }}</span>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% block admin_workspace_content %}{% endblock %}
+{% endblock %}

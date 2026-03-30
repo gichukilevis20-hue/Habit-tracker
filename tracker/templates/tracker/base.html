@@ -1,0 +1,146 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Habit Tracker{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Merriweather:wght@400;700&family=Montserrat:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.18/main.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'tracker/app.css' %}" />
+    <link rel="stylesheet" href="{% static 'tracker/contact.css' %}" />
+    <style>
+        :root {
+            --app-font: 'Manrope', sans-serif;
+            --primary: #ff7a59;
+            --secondary: #3256ff;
+            --canvas: #fff8f1;
+            --surface: rgba(255, 255, 255, 0.82);
+            --surface-strong: #ffffff;
+            --surface-muted: rgba(255, 255, 255, 0.6);
+            --text-main: #172033;
+            --text-soft: #5b6480;
+            --border-soft: rgba(23, 32, 51, 0.09);
+        }
+        {% if user.is_authenticated %}
+            {% if user.profile.font == 'montserrat' %}:root { --app-font: 'Montserrat', sans-serif; }{% endif %}
+            {% if user.profile.font == 'space_grotesk' %}:root { --app-font: 'Space Grotesk', sans-serif; }{% endif %}
+            {% if user.profile.font == 'playfair' %}:root { --app-font: 'Playfair Display', serif; }{% endif %}
+            {% if user.profile.font == 'merriweather' %}:root { --app-font: 'Merriweather', serif; }{% endif %}
+            {% if user.profile.font == 'courier' %}:root { --app-font: 'Courier New', monospace; }{% endif %}
+            :root {
+                --primary: {{ user.profile.primary_color|default:'#ff7a59' }};
+                --secondary: {{ user.profile.secondary_color|default:'#3256ff' }};
+                {% if user.profile.theme == 'minimal' %}
+                    --canvas: #f5f1ea;
+                    --surface: rgba(255, 255, 255, 0.9);
+                    --surface-strong: #ffffff;
+                    --surface-muted: rgba(244, 241, 233, 0.92);
+                {% endif %}
+            }
+        {% endif %}
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="theme-{% if user.is_authenticated %}{{ user.profile.theme }}{% else %}colorful{% endif %} {% block body_class %}{% endblock %}">
+<div class="site-backdrop"></div>
+<nav class="navbar navbar-expand-lg app-navbar">
+    <div class="container-xxl">
+        <a class="navbar-brand" href="{% url 'home' %}">
+            <span class="brand-mark"><i class="fa-solid fa-seedling"></i></span>
+            <span class="brand-copy">Habit Tracker</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center gap-2">
+                {% if user.is_authenticated %}
+                    <li class="nav-item d-none d-lg-block">
+                        <span class="muted-copy me-3">{{ app_shell.active_count }} active · {{ app_shell.archived_count }} paused</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}" href="{% url 'home' %}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}is-active{% endif %}" href="{% url 'profile' %}">Style</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'donate' %}is-active{% endif %}" href="{% url 'donate' %}">Donate</a>
+                    </li>
+                    {% if not user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'contact_us' %}is-active{% endif %}" href="{% url 'contact_us' %}">Contact</a>
+                        </li>
+                    {% endif %}
+                    {% if user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' or request.resolver_match.url_name == 'admin_users' or request.resolver_match.url_name == 'admin_user_create' or request.resolver_match.url_name == 'admin_user_edit' or request.resolver_match.url_name == 'admin_user_delete' or request.resolver_match.url_name == 'admin_habits' or request.resolver_match.url_name == 'admin_habit_create' or request.resolver_match.url_name == 'admin_habit_edit' or request.resolver_match.url_name == 'admin_habit_delete' or request.resolver_match.url_name == 'admin_donations' or request.resolver_match.url_name == 'admin_donation_create' or request.resolver_match.url_name == 'admin_donation_edit' or request.resolver_match.url_name == 'admin_donation_delete' or request.resolver_match.url_name == 'admin_messages' or request.resolver_match.url_name == 'admin_message_detail' or request.resolver_match.url_name == 'admin_message_create' or request.resolver_match.url_name == 'admin_message_edit' or request.resolver_match.url_name == 'admin_message_delete' %}is-active{% endif %}" href="{% url 'admin_dashboard' %}" title="Admin Dashboard">
+                                <i class="fa-solid fa-screwdriver-wrench"></i> Admin
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <form method="post" action="{% url 'logout' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link btn btn-link">Logout</button>
+                        </form>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-gradient btn-sm" href="{% url 'create_habit' %}">
+                            <i class="fa-solid fa-plus me-1"></i>New Habit
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'contact_us' %}is-active{% endif %}" href="{% url 'contact_us' %}">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-gradient btn-sm" href="{% url 'signup' %}">
+                            <i class="fa-solid fa-sparkles me-1"></i>Sign Up
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container-xxl py-4 py-lg-5">
+    {% if messages %}
+        <div class="message-stack">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} app-alert">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="app-footer">
+    <div class="container-xxl d-flex flex-column flex-lg-row justify-content-between gap-2">
+        <p class="mb-0">Track habits, review your week, and keep your data close.</p>
+        <div class="footer-links d-flex gap-3">
+            <a href="{% url 'contact_us' %}">Contact Us</a>
+            <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'export_data' %}?format=txt">Download Report</a>
+            {% endif %}
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.18/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'tracker/navbar-scroll.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

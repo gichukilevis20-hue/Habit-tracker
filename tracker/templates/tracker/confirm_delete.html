@@ -1,0 +1,22 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Delete Habit | Habit Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="form-panel p-4 p-lg-5 text-center">
+            <span class="section-kicker">Delete habit</span>
+            <h1 class="section-title">Remove {{ object }}</h1>
+            <p class="section-subtitle">This deletes the habit and its related entries and reviews. If you only want to pause it, edit the habit and switch off the active toggle instead.</p>
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-center flex-wrap gap-2">
+                    <button class="btn btn-outline-danger rounded-pill px-4" type="submit">Delete Habit</button>
+                    <a class="btn btn-outline-app px-4" href="{% url 'home' %}">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'tracker/admin_workspace_base.html' %}
+
+{% block admin_workspace_content %}
+<section class="section-block">
+    <form method="post" {% if form_action == 'multipart/form-data' %}enctype="multipart/form-data"{% endif %}>
+        {% csrf_token %}
+        <div class="row g-4">
+            <div class="{% if secondary_form %}col-xl-7{% else %}col-xl-8{% endif %}">
+                <div class="form-panel h-100">
+                    <div class="admin-section-head">
+                        <div>
+                            <span class="section-kicker">{{ primary_form_title|default:"Form" }}</span>
+                            <h2 class="section-title mb-0">{{ admin_page_title }}</h2>
+                        </div>
+                        {% if record_summary %}
+                            <span class="tiny-pill">{{ record_summary }}</span>
+                        {% endif %}
+                    </div>
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="mt-4">
+                        {% include 'tracker/partials/form_fields.html' with form=form %}
+                    </div>
+                </div>
+            </div>
+            {% if secondary_form %}
+                <div class="col-xl-5">
+                    <div class="form-panel h-100">
+                        <div class="admin-section-head">
+                            <div>
+                                <span class="section-kicker">{{ secondary_form_title|default:"Secondary form" }}</span>
+                                <h2 class="section-title mb-0">Supporting Details</h2>
+                            </div>
+                        </div>
+                        {% if secondary_form.non_field_errors %}
+                            <div class="alert alert-danger mt-3">{{ secondary_form.non_field_errors }}</div>
+                        {% endif %}
+                        <div class="mt-4">
+                            {% include 'tracker/partials/form_fields.html' with form=secondary_form %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        <div class="d-flex gap-2 flex-wrap mt-4">
+            <button class="btn btn-gradient" type="submit">{{ submit_label|default:"Save" }}</button>
+            <a class="btn btn-soft" href="{{ cancel_url }}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

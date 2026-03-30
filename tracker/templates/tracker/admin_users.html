@@ -1,0 +1,145 @@
+{% extends 'tracker/admin_workspace_base.html' %}
+
+{% block admin_workspace_content %}
+<section class="section-block">
+    <div class="admin-table-card">
+        <div class="admin-section-head">
+            <div>
+                <span class="section-kicker">Directory</span>
+                <h2 class="section-title mb-0">User Accounts</h2>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="tiny-pill">{{ visible_user_count }} results</span>
+                <a class="btn btn-gradient" href="{% url 'admin_user_create' %}"><i class="fa-solid fa-user-plus me-2"></i>Add User</a>
+            </div>
+        </div>
+
+        <form method="get" class="admin-filter-grid mt-4">
+            <div>
+                <label class="form-label" for="user_q">Search</label>
+                <input class="form-control" id="user_q" name="user_q" value="{{ search_query }}" placeholder="Username, email, name, or wallet" />
+            </div>
+            <div>
+                <label class="form-label" for="user_role">Role</label>
+                <select class="form-select" id="user_role" name="user_role">
+                    {% for option in role_options %}
+                        <option value="{{ option.value }}" {% if role_filter == option.value %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="user_activity">Activity</label>
+                <select class="form-select" id="user_activity" name="user_activity">
+                    {% for option in activity_options %}
+                        <option value="{{ option.value }}" {% if activity_filter == option.value %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="admin-filter-actions">
+                <button class="btn btn-gradient" type="submit">Apply</button>
+                <a class="btn btn-soft" href="{% url 'admin_users' %}">Reset</a>
+            </div>
+        </form>
+
+        <div class="admin-filter-summary mt-4">
+            <span class="tiny-pill">{{ selected_role_label }}</span>
+            <span class="tiny-pill">{{ selected_activity_label }}</span>
+            {% if search_query %}
+                <span class="tiny-pill">Search: "{{ search_query }}"</span>
+            {% endif %}
+        </div>
+
+        <div class="table-responsive mt-4">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Access</th>
+                        <th>Profile</th>
+                        <th>Habit Activity</th>
+                        <th>Donation Activity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user_row in users %}
+                        <tr>
+                            <td>
+                                <div class="admin-user-block">
+                                    <span class="admin-user-avatar {% if user_row.dashboard_profile and user_row.dashboard_profile.profile_image_url %}has-image{% endif %}">
+                                        {% if user_row.dashboard_profile and user_row.dashboard_profile.profile_image_url %}
+                                            <img
+                                                src="{{ user_row.dashboard_profile.profile_image_url }}"
+                                                alt="{{ user_row.username }} avatar"
+                                                class="avatar-image"
+                                                loading="lazy"
+                                                decoding="async"
+                                                onerror="this.parentElement.classList.remove('has-image'); this.remove();"
+                                            />
+                                        {% endif %}
+                                        <span class="avatar-fallback">{{ user_row.username|first|upper }}</span>
+                                    </span>
+                                    <div>
+                                        <strong>{{ user_row.username }}</strong>
+                                        <div class="muted-copy small">{{ user_row.full_name_display }}</div>
+                                        <div class="muted-copy small">{{ user_row.email|default:"No email" }}</div>
+                                        <div class="muted-copy small">
+                                            Last login:
+                                            {% if user_row.last_login %}
+                                                {{ user_row.last_login|date:"Y-m-d H:i" }}
+                                            {% else %}
+                                                Never
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-2">
+                                    {% if user_row.is_staff %}
+                                        <span class="badge-status success">Staff</span>
+                                    {% else %}
+                                        <span class="badge-status pending">Member</span>
+                                    {% endif %}
+                                    {% if user_row.is_active %}
+                                        <span class="badge-status success">Active</span>
+                                    {% else %}
+                                        <span class="badge-status failed">Inactive</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="muted-copy small">Theme: {{ user_row.theme_label }}</div>
+                                <div class="muted-copy small">Font: {{ user_row.font_label }}</div>
+                                <div class="muted-copy small">M-Pesa: {{ user_row.mpesa_phone_display }}</div>
+                                <div class="muted-copy small">BTC: {{ user_row.bitcoin_address_preview }}</div>
+                            </td>
+                            <td>
+                                <div class="muted-copy small">{{ user_row.habit_count }} total · {{ user_row.active_habit_count }} active</div>
+                                <div class="muted-copy small">{{ user_row.entry_count }} entries · {{ user_row.review_count }} reviews</div>
+                                <div class="muted-copy small">Last entry: {{ user_row.last_entry_date|date:"Y-m-d"|default:"None" }}</div>
+                            </td>
+                            <td>
+                                <div class="muted-copy small">{{ user_row.donation_count }} donations · {{ user_row.completed_donation_count }} completed</div>
+                                <div class="muted-copy small">Last donation: {{ user_row.last_donation_at|date:"Y-m-d H:i"|default:"None" }}</div>
+                            </td>
+                            <td>
+                                <div class="admin-action-list">
+                                    <a class="btn btn-outline-app btn-sm" href="{% url 'admin_user_edit' user_row.id %}">Edit</a>
+                                    <a class="btn btn-soft btn-sm" href="{% url 'admin_habits' %}?habit_user={{ user_row.id }}">Habits</a>
+                                    <a class="btn btn-soft btn-sm" href="{% url 'admin_donations' %}?donation_user={{ user_row.id }}">Donations</a>
+                                    <a class="btn btn-danger btn-sm" href="{% url 'admin_user_delete' user_row.id %}">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6">No users match the current filters.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

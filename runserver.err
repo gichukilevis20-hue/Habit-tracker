@@ -1,0 +1,28 @@
+Watching for file changes with StatReloader
+[26/Mar/2026 23:08:08] "GET /login/ HTTP/1.1" 200 11881
+[26/Mar/2026 23:08:11] "POST /login/ HTTP/1.1" 200 12202
+[26/Mar/2026 23:08:11] "GET / HTTP/1.1" 302 0
+[26/Mar/2026 23:08:11] "GET /login/ HTTP/1.1" 200 11881
+[26/Mar/2026 23:08:11] "GET /admin-dashboard/ HTTP/1.1" 302 0
+[26/Mar/2026 23:08:12] "GET /admin/login/?next=/admin-dashboard/ HTTP/1.1" 200 4113
+[26/Mar/2026 23:12:27] "GET /login/ HTTP/1.1" 200 11881
+[26/Mar/2026 23:12:27] "GET /static/tracker/app.css HTTP/1.1" 200 30112
+[26/Mar/2026 23:12:32] "POST /login/ HTTP/1.1" 200 12121
+[26/Mar/2026 23:12:51] "POST /login/ HTTP/1.1" 302 0
+[26/Mar/2026 23:12:51] "GET / HTTP/1.1" 200 172999
+[26/Mar/2026 23:12:52] "GET /calendar/events/?start=2026-03-01T00%3A00%3A00%2B03%3A00&end=2026-04-12T00%3A00%3A00%2B03%3A00 HTTP/1.1" 200 419
+[26/Mar/2026 23:14:32] "GET /profile/ HTTP/1.1" 200 13827
+[26/Mar/2026 23:14:32,850] - Broken pipe from ('127.0.0.1', 59357)
+[26/Mar/2026 23:14:32,857] - Broken pipe from ('127.0.0.1', 59381)
+[26/Mar/2026 23:14:32,865] - Broken pipe from ('127.0.0.1', 51207)
+[26/Mar/2026 23:14:32,867] - Broken pipe from ('127.0.0.1', 59451)
+[26/Mar/2026 23:14:34] "GET /static/tracker/app.css HTTP/1.1" 304 0
+[26/Mar/2026 23:14:38] "GET /media/profile_pics/1732856301329.jpg HTTP/1.1" 304 0
+[26/Mar/2026 23:14:44] "POST /logout/ HTTP/1.1" 302 0
+[26/Mar/2026 23:14:45] "GET /login/ HTTP/1.1" 200 11881
+[26/Mar/2026 23:14:56] "POST /login/ HTTP/1.1" 302 0
+[26/Mar/2026 23:14:56] "GET / HTTP/1.1" 200 81810
+[26/Mar/2026 23:14:56] "GET /calendar/events/?start=2026-03-01T00%3A00%3A00%2B03%3A00&end=2026-04-12T00%3A00%3A00%2B03%3A00 HTTP/1.1" 200 2
+[26/Mar/2026 23:15:00] "GET /admin-dashboard/ HTTP/1.1" 200 55441
+[26/Mar/2026 23:15:08] "GET / HTTP/1.1" 200 81810
+[26/Mar/2026 23:15:09] "GET /calendar/events/?start=2026-03-01T00%3A00%3A00%2B03%3A00&end=2026-04-12T00%3A00%3A00%2B03%3A00 HTTP/1.1" 200 2
