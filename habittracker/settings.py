@@ -15,6 +15,7 @@ from pathlib import Path
 import os
 import sys
 from urllib.parse import urlsplit
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,7 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # get environment variables from .env
 load_dotenv(BASE_DIR / '.env')
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-ug4!da0...')
+DEFAULT_SECRET_KEY = 'django-insecure-ug4!da0...'
+SECRET_KEY = os.getenv('SECRET_KEY', DEFAULT_SECRET_KEY)
 
 
 def module_is_available(module_name):
@@ -109,6 +111,9 @@ DEBUG = env_bool('DEBUG', True)
 # Keep local runserver usable even when the environment is configured like production.
 if not DEBUG and 'runserver' in sys.argv:
     DEBUG = True
+
+LOCAL_DEVELOPMENT_COMMANDS = {'runserver', 'test', 'check'}
+USING_LOCAL_DEVELOPMENT_COMMAND = any(command in sys.argv for command in LOCAL_DEVELOPMENT_COMMANDS)
 
 VERCEL_ENABLED = env_bool('VERCEL', False)
 VERCEL_URL = os.getenv('VERCEL_URL', '').strip()
@@ -245,7 +250,19 @@ WSGI_APPLICATION = 'habittracker.wsgi.application'
 # For Vercel/production, use DATABASE_URL environment variable
 # For local development, use SQLite
 
-DATABASE_URL = os.getenv('DATABASE_URL', '')
+DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
+REQUIRE_MANAGED_DATABASE = VERCEL_ENABLED or (not DEBUG and not USING_LOCAL_DEVELOPMENT_COMMAND)
+
+if REQUIRE_MANAGED_DATABASE and SECRET_KEY == DEFAULT_SECRET_KEY:
+    raise ImproperlyConfigured(
+        'SECRET_KEY must be set for Vercel or any non-local deployment.'
+    )
+
+if REQUIRE_MANAGED_DATABASE and not DATABASE_URL:
+    raise ImproperlyConfigured(
+        'DATABASE_URL must be set for Vercel or any non-local deployment. '
+        'SQLite fallback is only supported for local development.'
+    )
 
 if DATABASE_URL:
     # Only require dj-database-url when a DATABASE_URL is actually configured.
