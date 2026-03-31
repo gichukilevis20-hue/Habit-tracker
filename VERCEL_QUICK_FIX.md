@@ -1,36 +1,28 @@
-# Quick Fix for Vercel 500 Errors
+# Vercel Quick Fix
 
-## TL;DR - What to do NOW:
+For a brand-new Vercel site, do these four things before expecting login and signup to work:
 
-1. **In Vercel Dashboard Settings**, add these environment variables:
+1. Create or connect a real PostgreSQL database.
+2. Set `DATABASE_URL`, `SECRET_KEY`, and `APP_BASE_URL` in Vercel `Production` environment variables.
+3. Check `Deployment Protection` so the public site is not blocked by Vercel Authentication.
+4. Redeploy.
 
+## Required Variables
+
+```env
+DATABASE_URL=postgresql://user:password@host:5432/habittracker
+SECRET_KEY=your-long-random-django-secret
+APP_BASE_URL=https://your-public-production-domain
 ```
-DEBUG=False
-ALLOWED_HOSTS=habit-tracker-[your-id].vercel.app,yourdomain.com
-SECRET_KEY=<run: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())">
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-specific-password
-DATABASE_URL=postgresql://... (if using external DB or Vercel Postgres)
-```
 
-2. **In Vercel Dashboard Storage**, click "Create Database" → Select "Postgres"
-   - This auto-sets DATABASE_URL
+## What The Repo Already Handles
 
-3. **Redeploy** on Vercel (Settings → Deployments → Latest → Redeploy)
+- Django startup on Vercel
+- Production database parsing via `DATABASE_URL`
+- Build-time `migrate --noinput`
+- Build-time `collectstatic --noinput`
+- Fast failure if production secrets or database settings are missing
 
-## Why you got 500 errors:
+## Expected Failure Mode
 
-- No DATABASE_URL → SQLite can't work on serverless
-- DEBUG not set to False → Different error handling
-- ALLOWED_HOSTS not set → Doesn't match vercel domain
-
-## Files we added:
-
-- ✅ `vercel.json` - Vercel configuration
-- ✅ `api/index.py` - Serverless function entry point
-- ✅ `VERCEL_DEPLOYMENT.md` - Full deployment guide
-- ✅ `.env.example` - Template for env vars
-- ✅ Updated `requirements.txt` - Added dj-database-url
-- ✅ Updated `settings.py` - Added DATABASE_URL support
-
-That's it! Try redeploying now.
+If `DATABASE_URL` or `SECRET_KEY` is missing on Vercel, the deployment should now fail during startup instead of looking healthy and breaking later at login/signup time.
