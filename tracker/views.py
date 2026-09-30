@@ -3,6 +3,7 @@ import csv
 import datetime
 import io
 import json
+import logging
 import os
 from collections import defaultdict
 from decimal import Decimal
@@ -21,6 +22,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+
+logger = logging.getLogger(__name__)
 
 from .forms import (
     AdminDonationForm,
@@ -123,8 +126,10 @@ def load_electrum_addresses():
                 for output in item.get('outputs', []):
                     if len(output) >= 2 and output[1].startswith('bc1'):
                         addresses.append(output[1])
-    except Exception:
-        pass
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        logger.warning(f'Failed to load Bitcoin addresses from {path}: {exc}')
+    except Exception as exc:
+        logger.error(f'Unexpected error loading Bitcoin addresses: {exc}')
     return list(dict.fromkeys(addresses))
 
 
