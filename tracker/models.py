@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
@@ -146,7 +147,7 @@ class HabitEntry(models.Model):
         unique_together = ('habit', 'date')
 
     def __str__(self):
-        return f"{self.habit.title} on {self.date}" 
+        return f"{self.habit.title} on {self.date}"
 
 class WeeklyReview(models.Model):
     habit = models.ForeignKey(Habit, on_delete=models.CASCADE, related_name='weekly_reviews')
@@ -162,7 +163,7 @@ class WeeklyReview(models.Model):
         unique_together = ('habit', 'week_start', 'week_end')
 
     def __str__(self):
-        return f"Review for {self.habit.title} week {self.week_start}" 
+        return f"Review for {self.habit.title} week {self.week_start}"
 
 class Donation(models.Model):
     METHOD_CHOICES = [
@@ -203,7 +204,7 @@ class ContactMessage(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='contact_messages')
     sender_name = models.CharField(max_length=100)
     sender_email = models.EmailField()
-    recipient_email = models.EmailField(default='habittracker001@gmail.com')
+    recipient_email = models.EmailField(blank=True, default='')
     subject = models.CharField(max_length=200, blank=True, default='General Inquiry')
     message_body = models.TextField()
     delivery_status = models.CharField(max_length=20, choices=DELIVERY_STATUS_CHOICES, default='pending')
@@ -216,6 +217,11 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"{self.sender_email} -> {self.recipient_email} ({self.subject or 'General Inquiry'})"
+
+    def save(self, *args, **kwargs):
+        if not self.recipient_email:
+            self.recipient_email = getattr(settings, 'CONTACT_FORM_RECIPIENT_EMAIL', 'contact@example.com')
+        super().save(*args, **kwargs)
 
 
 class AdminEmail(models.Model):
